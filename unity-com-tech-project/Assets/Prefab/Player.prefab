@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3590101219294992364}
   - component: {fileID: 2685794030211061051}
-  - component: {fileID: 7151607579865505679}
+  - component: {fileID: -895624518657253525}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -28,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -86,7 +86,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7151607579865505679
+--- !u!114 &-895624518657253525
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,6 +98,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab926f1355271274ab01d014e5d6d8a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MoveSpeed: 1
-  ProjectilePrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
-    type: 3}
+  GameData: {fileID: 11400000, guid: da483ae29caccde4ea590f15fcd8b7c8, type: 2}

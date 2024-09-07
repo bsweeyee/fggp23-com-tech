@@ -43,7 +43,7 @@ public partial struct ProjectilesMoveJob : IJobEntity
     public LocalToWorld PlayerLocalToWorld;
     
     [BurstCompile]
-    private void Execute(ref LocalTransform transform, MovementData movementData)
+    private void Execute(ref LocalTransform transform, in ProjectileTag pTag, MovementData movementData)
     {
         float3 moveDirection = PlayerLocalToWorld.Up;        
         transform.Position.xy += moveDirection.xy * movementData.Speed * DeltaTime;

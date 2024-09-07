@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e46f0ad5265fb74bad0c55457cc2253, type: 3}
+  m_Name: GameData
+  m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
+    type: 3}
+  playerStartPosition: {x: 0, y: 0}
+  playerMoveSpeed: 5
+  playerAngularSpeed: 5
+  enemySpawnStartPosition: {x: 0, y: 0}
+  enemySpawnRate: 0
+  projectilePrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
+    type: 3}
+  projectileSpeed: 1

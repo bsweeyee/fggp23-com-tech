@@ -25,7 +25,7 @@ public struct GameDataComponent : IComponentData
 
     // Spawn
     public float2 SpawnEnemyStartPosition;
-    public float SpawnEnemyRate;       
+    public float SpawnEnemyRate;    
 }
 
 #endregion
@@ -60,5 +60,9 @@ public struct PlayerTag : IComponentData
 #endregion
 
 public struct ProjectileTag : IComponentData
+{
+}
+
+public struct CameraTag : IComponentData
 {
 }

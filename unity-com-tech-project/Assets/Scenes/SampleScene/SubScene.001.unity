@@ -167,8 +167,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GameData: {fileID: 11400000, guid: da483ae29caccde4ea590f15fcd8b7c8, type: 2}
-  PlayerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
-    type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

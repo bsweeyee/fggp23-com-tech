@@ -38,8 +38,12 @@ public partial class GameSystem : SystemBase
             var playerTransform = SystemAPI.GetComponentRW<LocalTransform>(playerEntity);
             playerTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
 
+            // var cameraEntity = EntityManager.Instantiate(gd.CameraEntity);
+            // var cameraTransform = SystemAPI.GetComponentRW<LocalTransform>(cameraEntity);
+            // cameraTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
+
             Player = playerEntity;            
-            SystemAPI.SetSingleton(gd);
+            SystemAPI.SetSingleton(gd);            ;            
         }        
         
         Debug.Log("start running");                

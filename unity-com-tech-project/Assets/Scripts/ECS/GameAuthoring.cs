@@ -20,9 +20,10 @@ public class GameAuthoring : MonoBehaviour
             
             // Game Entity
             Entity gameEntity = GetEntity(TransformUsageFlags.None);            
-            Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.None);
-            Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.None);
-                    
+            Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.Dynamic);
+            Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);
+            // Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.Dynamic);
+
             AddComponent(gameEntity, new GameDataComponent
             {
                 // Player
@@ -37,7 +38,7 @@ public class GameAuthoring : MonoBehaviour
 
                 // Spawn
                 SpawnEnemyStartPosition = authoring.GameData.EnemySpawnStartPosition,
-                SpawnEnemyRate = authoring.GameData.EnemySpawnRate         
+                SpawnEnemyRate = authoring.GameData.EnemySpawnRate,                
             });            
             Debug.Log("game authoring baked");            
         }

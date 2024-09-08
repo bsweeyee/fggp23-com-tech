@@ -83,3 +83,10 @@ public struct SpawnerData : IComponentData
 {
     public double LastSpawnTime;    
 }
+
+public struct AABBData : IComponentData
+{
+    public float2 Min;
+    public float2 Max;
+    public float2 OriginalSize;
+}

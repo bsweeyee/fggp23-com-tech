@@ -24,15 +24,19 @@ public partial struct PlayerMoveSystem : ISystem
             DeltaTime = deltaTime,
             GameData = gc
         }.Schedule();
+
+        new PlayerCalculateAABB
+        {
+        }.Schedule();
     }
 }
 
-// [BurstCompile]
+[BurstCompile]
 public partial struct PlayerMoveJob : IJobEntity
 {
     public float DeltaTime;
     public GameDataComponent GameData;
-    // [BurstCompile]
+    [BurstCompile]
     private void Execute( ref LocalTransform transform, in PlayerTag pt, in InputData inputData, ref MovementData movementData )    
     {
         float2 inputDirection = inputData.Direction;
@@ -85,3 +89,15 @@ public partial struct PlayerMoveJob : IJobEntity
     }
 }
 
+public partial struct PlayerCalculateAABB : IJobEntity
+{
+    private void Execute(in PlayerTag playerTag, in LocalToWorld playerLTW, ref AABBData aabb)
+    {                
+        float nR = math.abs(math.dot(math.normalize(playerLTW.Up), math.normalize(math.right())));
+        float newY = math.lerp(aabb.OriginalSize.y, aabb.OriginalSize.x, nR);                        
+        float newX = math.lerp(aabb.OriginalSize.x, aabb.OriginalSize.y, nR);
+
+        aabb.Min = new float2(-newX/2, -newY/2);
+        aabb.Max = new float2(newX/2, newY/2);
+    }
+}

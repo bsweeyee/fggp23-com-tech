@@ -15,7 +15,11 @@ public class PlayerAuthoring : MonoBehaviour
             {
                 Debug.LogWarning($"{authoring.GetType().ToString()} Missing Game Data scriptable Object");
                 return;
-            } 
+            }
+
+            SpriteRenderer sr = authoring.GameData.PlayerPrefab.GetComponent<SpriteRenderer>();
+            Vector3 srScale = authoring.GameData.PlayerPrefab.transform.lossyScale;
+            Vector3 size = sr.bounds.size; 
 
             Entity playerEntity = GetEntity(TransformUsageFlags.Dynamic);            
                         
@@ -27,6 +31,11 @@ public class PlayerAuthoring : MonoBehaviour
             });
             AddComponent(playerEntity, new ProjectileShooterData {
                 LastFireTime = 0,
+            });
+            AddComponent(playerEntity, new AABBData {
+                Min = new float2(-size.x/2, -size.y/2) * srScale.x/2,
+                Max = new float2(size.x/2, size.y/2) * srScale.y/2,
+                OriginalSize = new float2(size.x, size.y),
             });
             
             Debug.Log("player authoring baked");

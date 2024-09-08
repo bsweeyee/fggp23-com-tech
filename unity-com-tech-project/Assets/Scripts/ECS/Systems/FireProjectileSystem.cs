@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEditor.Search;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(TransformSystemGroup))]
@@ -12,11 +13,14 @@ public partial struct FireProjectileSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
-        var gameData = SystemAPI.GetSingleton<GameDataComponent>();
+        var gameData = SystemAPI.GetSingleton<GameDataComponent>();        
 
-        foreach(var (localToWorld, transform, shooterData) in SystemAPI.Query<LocalToWorld, LocalTransform, RefRW<ProjectileShooterData>>().WithAll<ProjectileShooterData>())
+        foreach(var (localToWorld, transform, shooterData, inputData) in SystemAPI.Query<LocalToWorld, LocalTransform, RefRW<ProjectileShooterData>, RefRW<InputData>>().WithAll<ProjectileShooterData>())
         {
-            if (shooterData.ValueRO.ShouldFire)
+            bool isShooting = inputData.ValueRO.InputState == 1 || inputData.ValueRO.InputState == 2;
+            bool isCooldownDone = (SystemAPI.Time.ElapsedTime - shooterData.ValueRO.LastFireTime) > gameData.ProjectileShootCooldown;
+            
+            if (isShooting && isCooldownDone)
             {
                 var newProjectile = ecb.Instantiate(gameData.ProjectileEntity);
                 var projectileTransform = LocalTransform.FromPositionRotation(transform.Position,transform.Rotation);
@@ -28,9 +32,8 @@ public partial struct FireProjectileSystem : ISystem
                     Direction = localToWorld.Up.xy, 
                     Speed = gameData.ProjectileSpeed 
                 });
-
-                shooterData.ValueRW.ShouldFire = false;
-                Debug.Log("projectile fired!");
+                
+                shooterData.ValueRW.LastFireTime = SystemAPI.Time.ElapsedTime;                
             }
         }
         ecb.Playback(state.EntityManager);

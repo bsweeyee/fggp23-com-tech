@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Entities.Serialization;
 
 public class GameAuthoring : MonoBehaviour
@@ -22,7 +23,7 @@ public class GameAuthoring : MonoBehaviour
             Entity gameEntity = GetEntity(TransformUsageFlags.None);            
             Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.Dynamic);
             Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);
-            // Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.Dynamic);
+            Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.None);
 
             AddComponent(gameEntity, new GameDataComponent
             {
@@ -34,11 +35,16 @@ public class GameAuthoring : MonoBehaviour
 
                 // Projectile
                 ProjectileEntity = projectileEntity,
-                ProjectileSpeed = authoring.GameData.ProjectileSpeed,    
+                ProjectileSpeed = authoring.GameData.ProjectileSpeed,
+                ProjectileShootCooldown = authoring.GameData.ProjectileShootCooldown,    
 
                 // Spawn
                 SpawnEnemyStartPosition = authoring.GameData.EnemySpawnStartPosition,
-                SpawnEnemyRate = authoring.GameData.EnemySpawnRate,                
+                SpawnEnemyRate = authoring.GameData.EnemySpawnRate,
+
+                //Camera
+                CameraEntity = cameraEntity,
+                CameraBoundsPadding = authoring.GameData.CameraBoundsPadding
             });            
             Debug.Log("game authoring baked");            
         }

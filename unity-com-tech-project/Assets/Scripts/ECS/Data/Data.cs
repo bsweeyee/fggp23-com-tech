@@ -21,11 +21,16 @@ public struct GameDataComponent : IComponentData
 
     // Projectile
     public Entity ProjectileEntity;
-    public float ProjectileSpeed;    
+    public float ProjectileSpeed;
+    public double ProjectileShootCooldown;    
 
     // Spawn
     public float2 SpawnEnemyStartPosition;
-    public float SpawnEnemyRate;    
+    public float SpawnEnemyRate;
+
+    // Camera
+    public Entity CameraEntity;
+    public float2 CameraBoundsPadding;    
 }
 
 #endregion
@@ -45,13 +50,14 @@ public struct MovementData : IComponentData
 public struct InputData : IComponentData
 {
     public float2 Direction;
+    public int InputState; // 0: none, 1: pressed, 2: held, 3: released 
 }
 
 #region Player Data
 
 public struct ProjectileShooterData : IComponentData
-{
-    public bool ShouldFire;
+{    
+    public double LastFireTime;
 }
 
 public struct PlayerTag : IComponentData
@@ -63,6 +69,9 @@ public struct ProjectileTag : IComponentData
 {
 }
 
-public struct CameraTag : IComponentData
+public struct CameraData : IComponentData
 {
+    public float2 Position;
+    public float2 BoundsPadding;
+    public float2 Bounds;    
 }

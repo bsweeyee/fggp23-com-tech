@@ -18,10 +18,12 @@ public class GameDataSO : ScriptableObject
     [Header("Projectile settings")]
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private float projectileSpeed;
+    [SerializeField] private double projectileShootCooldown = 1;
 
     [Header("Camera settings")]
     [SerializeField] private GameObject cameraPrefab;
     [SerializeField] private float cameraSpeed = 10.0f;
+    [SerializeField] private Vector2 cameraBoundsPadding = new Vector2(50, 50);
 
     public GameObject PlayerPrefab { get { return playerPrefab; }} 
     public Vector2 PlayerStartPosition { get { return playerStartPosition; }} 
@@ -33,7 +35,9 @@ public class GameDataSO : ScriptableObject
 
     public GameObject ProjectilePrefab { get { return projectilePrefab; }} 
     public float ProjectileSpeed { get { return projectileSpeed; }} 
+    public double ProjectileShootCooldown { get { return projectileShootCooldown; }} 
 
     public GameObject CameraPrefab { get { return cameraPrefab; }} 
     public float CameraSpeed { get { return cameraSpeed; } }
+    public Vector2 CameraBoundsPadding { get { return cameraBoundsPadding; } }
 }

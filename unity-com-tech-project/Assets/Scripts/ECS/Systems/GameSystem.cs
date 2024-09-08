@@ -27,6 +27,7 @@ public partial class GameSystem : SystemBase
         base.OnStartRunning();            
         InputActions.Enable();        
         InputActions.Gameplay.Shoot.performed += OnShoot;
+        InputActions.Gameplay.Shoot.canceled += OnShootCancel;
 
         GameDataComponent gdc;
 
@@ -38,13 +39,15 @@ public partial class GameSystem : SystemBase
             var playerTransform = SystemAPI.GetComponentRW<LocalTransform>(playerEntity);
             playerTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
 
-            // var cameraEntity = EntityManager.Instantiate(gd.CameraEntity);
-            // var cameraTransform = SystemAPI.GetComponentRW<LocalTransform>(cameraEntity);
-            // cameraTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
 
             Player = playerEntity;            
-            SystemAPI.SetSingleton(gd);            ;            
-        }        
+            SystemAPI.SetSingleton(gd);
+            
+            var cameraEntity = EntityManager.Instantiate(gd.CameraEntity);
+            var ce = SystemAPI.GetComponent<CameraData>(cameraEntity);                               
+            SystemAPI.SetSingleton(ce);                       
+        }
+
         
         Debug.Log("start running");                
     }
@@ -56,8 +59,19 @@ public partial class GameSystem : SystemBase
             Vector2 moveInput = InputActions.Gameplay.Move.ReadValue<Vector2>();        
             RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);            
             pmi.ValueRW.Direction = moveInput;
+            
+            var s = pmi.ValueRO.InputState;
+            if (s == 3)
+            {
+                s = 0;
+            }
+            if (s == 1)
+            {
+                s = 2;
+            }
+            pmi.ValueRW.InputState = s;                        
         }
-    }
+    }   
 
     protected override void OnStopRunning()
     {
@@ -67,12 +81,19 @@ public partial class GameSystem : SystemBase
         Player = Entity.Null;        
     }
 
+    private void OnShootCancel(InputAction.CallbackContext context)
+    {
+       if (!SystemAPI.Exists(Player)) return;
+
+        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);        
+        pmi.ValueRW.InputState = 3;
+    }
+
     private void OnShoot(InputAction.CallbackContext context)
     {
-        if (!SystemAPI.Exists(Player)) return;        
-                
-        // TODO check if this cachable?
-        var playerProjectileTag = SystemAPI.GetComponentRW<ProjectileShooterData>(Player);        
-        playerProjectileTag.ValueRW.ShouldFire = true;
+        if (!SystemAPI.Exists(Player)) return;
+
+        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);                
+        pmi.ValueRW.InputState = 1;        
     }
 }

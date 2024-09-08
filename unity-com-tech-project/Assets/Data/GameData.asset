@@ -21,7 +21,9 @@ MonoBehaviour:
   enemySpawnRate: 0
   projectilePrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
     type: 3}
-  projectileSpeed: 1
+  projectileSpeed: 10
+  projectileShootCooldown: 0.1
   cameraPrefab: {fileID: 1386376870701149531, guid: 94f477ad37e164b4781a0e604484323f,
     type: 3}
   cameraSpeed: 10
+  cameraBoundsPadding: {x: 20, y: 20}

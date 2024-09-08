@@ -26,7 +26,7 @@ public class PlayerAuthoring : MonoBehaviour
                 AngularSpeed = 0
             });
             AddComponent(playerEntity, new ProjectileShooterData {
-                ShouldFire = false,
+                LastFireTime = 0,
             });
             
             Debug.Log("player authoring baked");

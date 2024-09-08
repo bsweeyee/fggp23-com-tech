@@ -5,7 +5,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Burst;
-using System.Diagnostics;
+using UnityEngine;
+using System.Runtime.CompilerServices;
 
 [UpdateAfter(typeof(PlayerMoveSystem))]
 [UpdateBefore(typeof(TransformSystemGroup))]
@@ -14,17 +15,33 @@ public partial struct ProjectileMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;
-        
+        float deltaTime = SystemAPI.Time.DeltaTime;        
+        Entity cdEntity = SystemAPI.GetSingletonEntity<CameraData>();
+        CameraData cd = SystemAPI.GetComponent<CameraData>(cdEntity);
+        EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
+
         // Fire based on having the FireProjectileTag data component
         foreach(var localToWorld in SystemAPI.Query<LocalToWorld>().WithAll<ProjectileShooterData>())
         {
-            new ProjectilesMoveJob
+            var moveJob = new ProjectilesMoveJob
             {
                 DeltaTime = deltaTime,
                 PlayerLocalToWorld = localToWorld
-            }.Schedule();      
-        }            
+            };
+            moveJob.Schedule();            
+        }
+        
+        //destroy entities when hit camera bounds
+        var destroyJob = new ProjectileDestroyJob
+        {
+            CameraData = cd,
+            CommandBuffer = ecb,
+        };         
+        destroyJob.Schedule();                              
+        
+        state.Dependency.Complete();
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();        
 
         // Run in Unity Main Thread
         // foreach(var (transform,moveSpeed) in SystemAPI.Query<RefRW<LocalTransform>, ProjectileMoveSpeed>())
@@ -36,6 +53,25 @@ public partial struct ProjectileMoveSystem : ISystem
     }
 }
 
+public partial struct ProjectileDestroyJob : IJobEntity
+{
+    public CameraData CameraData;
+    public EntityCommandBuffer CommandBuffer;
+    private void Execute(Entity entity, in ProjectileTag ptag, LocalTransform transform)
+    {
+        float2 topRight = CameraData.Position + (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
+        float2 bottomLeft = CameraData.Position - (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
+
+        float2 pos = transform.Position.xy;
+        
+        if (pos.x < bottomLeft.x || pos.y < bottomLeft.y || pos.x > topRight.x || pos.y > topRight.y)
+        {
+            Debug.Log($"{bottomLeft}, {topRight}, {pos}");
+            CommandBuffer.DestroyEntity(entity);
+        }
+    }
+}
+
 [BurstCompile]
 public partial struct ProjectilesMoveJob : IJobEntity
 {
@@ -44,8 +80,7 @@ public partial struct ProjectilesMoveJob : IJobEntity
     
     [BurstCompile]
     private void Execute(ref LocalTransform transform, in ProjectileTag pTag, MovementData movementData)
-    {
-        float3 moveDirection = PlayerLocalToWorld.Up;        
-        transform.Position.xy += moveDirection.xy * movementData.Speed * DeltaTime;
+    {                                
+        transform.Position.xy += movementData.Direction.xy * movementData.Speed * DeltaTime;
     }
 }

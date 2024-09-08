@@ -23,8 +23,12 @@ public class GameAuthoring : MonoBehaviour
             Entity gameEntity = GetEntity(TransformUsageFlags.None);            
             Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.Dynamic);
             Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);
-            Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.None);
+            Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.None);            
+            Entity enemyEntity = GetEntity(authoring.GameData.EnemyPrefab, TransformUsageFlags.Dynamic);
 
+            AddComponent(gameEntity, new SpawnerData{
+                LastSpawnTime = 0,             
+            });
             AddComponent(gameEntity, new GameDataComponent
             {
                 // Player
@@ -39,12 +43,15 @@ public class GameAuthoring : MonoBehaviour
                 ProjectileShootCooldown = authoring.GameData.ProjectileShootCooldown,    
 
                 // Spawn
-                SpawnEnemyStartPosition = authoring.GameData.EnemySpawnStartPosition,
+                EnemyEntity = enemyEntity,                
+                EnemyMoveSpeed = authoring.GameData.EnemyMoveSpeed,
+                SpawnEnemyStartPosition = authoring.GameData.EnemyMoveSpeed,
                 SpawnEnemyRate = authoring.GameData.EnemySpawnRate,
-
+                
                 //Camera
                 CameraEntity = cameraEntity,
                 CameraBoundsPadding = authoring.GameData.CameraBoundsPadding
+
             });            
             Debug.Log("game authoring baked");            
         }

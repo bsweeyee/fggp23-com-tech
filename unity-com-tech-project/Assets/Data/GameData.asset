@@ -15,10 +15,12 @@ MonoBehaviour:
   playerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
     type: 3}
   playerStartPosition: {x: 0, y: 0}
-  playerMoveSpeed: 5
-  playerAngularSpeed: 5
-  enemySpawnStartPosition: {x: 0, y: 0}
-  enemySpawnRate: 0
+  playerMoveSpeed: 10
+  playerAngularSpeed: 7
+  enemyPrefab: {fileID: 2236951593923482947, guid: 49c1f317a6a325b418ba212af9223f01,
+    type: 3}
+  enemySpawnRate: 2
+  enemySpeed: 5
   projectilePrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
     type: 3}
   projectileSpeed: 10

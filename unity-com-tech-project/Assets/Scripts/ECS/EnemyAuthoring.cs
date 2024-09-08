@@ -1,18 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Entities;
 
 public class EnemyAuthoring : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public GameDataSO GameData;
 
-    // Update is called once per frame
-    void Update()
+    public class EnemyAuthoringBaker : Baker<EnemyAuthoring>
     {
-        
+        public override void Bake(EnemyAuthoring authoring)
+        {
+            Entity e = GetEntity(TransformUsageFlags.Dynamic);
+            AddComponent<EnemyTag>(e);
+            AddComponent(e, new MovementData{
+                Speed = authoring.GameData.EnemyMoveSpeed,
+            });
+        }
     }
 }

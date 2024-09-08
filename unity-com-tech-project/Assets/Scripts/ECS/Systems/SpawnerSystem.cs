@@ -17,11 +17,11 @@ public partial struct SpawnSystem : ISystem
     
     public void OnUpdate(ref SystemState state)
     {
-        foreach(RefRW<TimerComponent> spawner in SystemAPI.Query<RefRW<TimerComponent>>())
+        foreach(RefRW<SpawnerData> spawner in SystemAPI.Query<RefRW<SpawnerData>>())
         {
             // if (spawner.ValueRO.NextEnemySpawnTime < SystemAPI.Time.ElapsedTime)
             // {
-                // Entity newEntity = state.EntityManager.Instantiate(spawner.ValueRO.EnemyPrefab);
+            // Entity newEntity = state.EntityManager.Instantiate(spawner.ValueRO.EnemyPrefab);
                 // float3 pos = new float3(spawner.ValueRO.EnemySpawnStartPosition.x,spawner.ValueRO.EnemySpawnStartPosition.y,0);
                 // state.EntityManager.SetComponentData(newEntity, LocalTransform.FromPosition(pos));
                 // spawner.ValueRW.NextEnemySpawnTime = (float) SystemAPI.Time.ElapsedTime + spawner.ValueRO.EnemySpawnRate;

@@ -24,21 +24,20 @@ public struct GameDataComponent : IComponentData
     public float ProjectileSpeed;
     public double ProjectileShootCooldown;    
 
-    // Spawn
+    // Spawn    
     public float2 SpawnEnemyStartPosition;
-    public float SpawnEnemyRate;
+    public double SpawnEnemyRate;
 
     // Camera
     public Entity CameraEntity;
     public float2 CameraBoundsPadding;    
+
+    // Enemy
+    public Entity EnemyEntity;
+    public float EnemyMoveSpeed;
 }
 
 #endregion
-
-public struct TimerComponent : IComponentData
-{
-    public float NextTime;    
-}
 
 public struct MovementData : IComponentData
 {
@@ -69,9 +68,18 @@ public struct ProjectileTag : IComponentData
 {
 }
 
+public struct EnemyTag : IComponentData
+{    
+}
+
 public struct CameraData : IComponentData
 {
     public float2 Position;
     public float2 BoundsPadding;
     public float2 Bounds;    
+}
+
+public struct SpawnerData : IComponentData
+{
+    public double LastSpawnTime;    
 }

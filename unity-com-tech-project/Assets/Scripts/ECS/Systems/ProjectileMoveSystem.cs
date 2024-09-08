@@ -20,16 +20,15 @@ public partial struct ProjectileMoveSystem : ISystem
         CameraData cd = SystemAPI.GetComponent<CameraData>(cdEntity);
         EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
 
-        // Fire based on having the FireProjectileTag data component
+        // projectile movement
         foreach(var localToWorld in SystemAPI.Query<LocalToWorld>().WithAll<ProjectileShooterData>())
         {
             var moveJob = new ProjectilesMoveJob
             {
-                DeltaTime = deltaTime,
-                PlayerLocalToWorld = localToWorld
+                DeltaTime = deltaTime,                
             };
             moveJob.Schedule();            
-        }
+        } 
         
         //destroy entities when hit camera bounds
         var destroyJob = new ProjectileDestroyJob
@@ -37,8 +36,8 @@ public partial struct ProjectileMoveSystem : ISystem
             CameraData = cd,
             CommandBuffer = ecb,
         };         
-        destroyJob.Schedule();                              
-        
+        destroyJob.Schedule();                                          
+
         state.Dependency.Complete();
         ecb.Playback(state.EntityManager);
         ecb.Dispose();        
@@ -53,10 +52,13 @@ public partial struct ProjectileMoveSystem : ISystem
     }
 }
 
+[BurstCompile]
 public partial struct ProjectileDestroyJob : IJobEntity
 {
     public CameraData CameraData;
     public EntityCommandBuffer CommandBuffer;
+    
+    [BurstCompile]
     private void Execute(Entity entity, in ProjectileTag ptag, LocalTransform transform)
     {
         float2 topRight = CameraData.Position + (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
@@ -65,8 +67,7 @@ public partial struct ProjectileDestroyJob : IJobEntity
         float2 pos = transform.Position.xy;
         
         if (pos.x < bottomLeft.x || pos.y < bottomLeft.y || pos.x > topRight.x || pos.y > topRight.y)
-        {
-            Debug.Log($"{bottomLeft}, {topRight}, {pos}");
+        {            
             CommandBuffer.DestroyEntity(entity);
         }
     }
@@ -75,8 +76,7 @@ public partial struct ProjectileDestroyJob : IJobEntity
 [BurstCompile]
 public partial struct ProjectilesMoveJob : IJobEntity
 {
-    public float DeltaTime;    
-    public LocalToWorld PlayerLocalToWorld;
+    public float DeltaTime;        
     
     [BurstCompile]
     private void Execute(ref LocalTransform transform, in ProjectileTag pTag, MovementData movementData)

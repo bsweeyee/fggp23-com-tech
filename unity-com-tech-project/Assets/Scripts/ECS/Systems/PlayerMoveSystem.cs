@@ -55,8 +55,9 @@ public partial struct PlayerMoveJob : IJobEntity
         else
         {
             // calculate rotation
+            inputDirection = math.normalize(inputDirection);
             float iDotRight = math.dot(inputDirection, math.right().xy);
-            if (math.abs(iDotRight) > 0.99f)
+            if (math.abs(iDotRight) > 0.3f)
             {
                 if (math.dot(inputDirection, math.right().xy) >= 0)                                
                     a.z -= DeltaTime * movementData.AngularSpeed;                            
@@ -69,7 +70,7 @@ public partial struct PlayerMoveJob : IJobEntity
             {
                 float iDotUp = math.dot(inputDirection, math.up().xy);
                 if (iDotUp <= 0) 
-                    movementData.Direction -= transform.Up().xy * 0.01f;                
+                    movementData.Direction = -transform.Up().xy;                
                 else                
                     movementData.Direction = transform.Up().xy;                             
                 
@@ -78,7 +79,7 @@ public partial struct PlayerMoveJob : IJobEntity
             }            
         }        
                 
-        float2 velocity = movementData.Direction * movementData.Speed;
+        float2 velocity = movementData.Direction * movementData.Speed;        
         transform.Position.xy += velocity * DeltaTime;
         transform.Rotation = quaternion.Euler(a);            
     }

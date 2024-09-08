@@ -12,8 +12,9 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private float playerAngularSpeed = 10.0f;    
 
     [Header("Enemy settings")]
-    [SerializeField] private Vector2 enemySpawnStartPosition;
+    [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private float enemySpawnRate;    
+    [SerializeField] private float enemySpeed;
 
     [Header("Projectile settings")]
     [SerializeField] private GameObject projectilePrefab;
@@ -30,8 +31,9 @@ public class GameDataSO : ScriptableObject
     public float PlayerMoveSpeed { get { return playerMoveSpeed; }} 
     public float PlayerAngularSpeed { get { return playerAngularSpeed; }} 
     
+    public GameObject EnemyPrefab { get { return enemyPrefab; }} 
     public float EnemySpawnRate { get { return enemySpawnRate; }}     
-    public Vector2 EnemySpawnStartPosition { get { return enemySpawnStartPosition; }}     
+    public float EnemyMoveSpeed { get { return enemySpeed; }}     
 
     public GameObject ProjectilePrefab { get { return projectilePrefab; }} 
     public float ProjectileSpeed { get { return projectileSpeed; }} 

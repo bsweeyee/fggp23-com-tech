@@ -13,9 +13,10 @@ public partial struct FireProjectileSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
-        var gameData = SystemAPI.GetSingleton<GameDataComponent>();        
+        var gameData = SystemAPI.GetSingleton<GameDataComponent>();
 
-        foreach(var (localToWorld, transform, shooterData, inputData) in SystemAPI.Query<LocalToWorld, LocalTransform, RefRW<ProjectileShooterData>, RefRW<InputData>>().WithAll<ProjectileShooterData>())
+
+        foreach(var (localToWorld, transform, shooterData, inputData, mvd) in SystemAPI.Query<LocalToWorld, LocalTransform, RefRW<ProjectileShooterData>, RefRW<InputData>, MovementData>().WithAll<ProjectileShooterData>())
         {
             bool isShooting = inputData.ValueRO.InputState == 1 || inputData.ValueRO.InputState == 2;
             bool isCooldownDone = (SystemAPI.Time.ElapsedTime - shooterData.ValueRO.LastFireTime) > gameData.ProjectileShootCooldown;
@@ -30,7 +31,7 @@ public partial struct FireProjectileSystem : ISystem
                 ecb.SetComponent(newProjectile, new MovementData 
                 { 
                     Direction = localToWorld.Up.xy, 
-                    Speed = gameData.ProjectileSpeed 
+                    Speed = gameData.ProjectileSpeed + mvd.Speed
                 });
                 
                 shooterData.ValueRW.LastFireTime = SystemAPI.Time.ElapsedTime;                

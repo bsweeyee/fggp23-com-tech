@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
-using Unity.Scenes;
+using Unity.Mathematics;
 using Unity.Transforms;
-using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 [UpdateInGroup(typeof(InitializationSystemGroup),OrderLast = true)]
 public partial class GameSystem : SystemBase
@@ -29,7 +29,7 @@ public partial class GameSystem : SystemBase
         InputActions.Gameplay.Shoot.performed += OnShoot;
         InputActions.Gameplay.Shoot.canceled += OnShootCancel;
 
-        GameDataComponent gdc;
+        GameDataComponent gdc;        
 
         foreach (var gd in SystemAPI.Query<GameDataComponent>())
         {
@@ -39,13 +39,12 @@ public partial class GameSystem : SystemBase
             var playerTransform = SystemAPI.GetComponentRW<LocalTransform>(playerEntity);
             playerTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
 
-
             Player = playerEntity;            
             SystemAPI.SetSingleton(gd);
             
             var cameraEntity = EntityManager.Instantiate(gd.CameraEntity);
             var ce = SystemAPI.GetComponent<CameraData>(cameraEntity);                               
-            SystemAPI.SetSingleton(ce);                       
+            SystemAPI.SetSingleton(ce);
         }
 
         
@@ -71,7 +70,39 @@ public partial class GameSystem : SystemBase
             }
             pmi.ValueRW.InputState = s;                        
         }
-    }   
+        
+        // spawn job
+        var gdEntity = SystemAPI.GetSingletonEntity<GameDataComponent>();
+        var gameData = SystemAPI.GetComponent<GameDataComponent>(gdEntity);        
+        var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(gdEntity);
+
+        var cameraEntity = SystemAPI.GetSingletonEntity<CameraData>();
+        var cameraData = SystemAPI.GetComponent<CameraData>(cameraEntity);
+
+        double t = SystemAPI.Time.ElapsedTime - spawnerData.ValueRO.LastSpawnTime;
+        // Debug.Log($"{t}, {SystemAPI.Time.ElapsedTime}, {spawnerData.ValueRO.LastSpawnTime}");                 
+        if (t > gameData.SpawnEnemyRate)
+        {            
+            var enemyEntity = EntityManager.Instantiate(gameData.EnemyEntity);                        
+        
+            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)((SystemAPI.Time.ElapsedTime+1) * 10));            
+            random.NextFloat();
+            float rng1 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1 
+            float rng2 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1
+
+            float2 direction = new float2(rng1, rng2);
+            float2 nDir = math.normalize(direction);
+
+            float2 randomPosition = cameraData.Position + nDir * math.length(cameraData.Bounds);
+            SystemAPI.SetComponent(enemyEntity, new LocalTransform {
+                Position = new float3(randomPosition.xy, 0),
+                Rotation = quaternion.identity,
+                Scale = 1
+        });         
+            
+            spawnerData.ValueRW.LastSpawnTime = SystemAPI.Time.ElapsedTime;                                
+        }        
+    }
 
     protected override void OnStopRunning()
     {
@@ -95,5 +126,31 @@ public partial class GameSystem : SystemBase
 
         RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);                
         pmi.ValueRW.InputState = 1;        
+    }
+}
+
+public partial struct SpawnJob : IJobEntity
+{
+    public GameDataComponent GameData;
+    public CameraData CameraData;
+    public double ElapsedTime;
+    public EntityCommandBuffer ECB;
+    public void Execute()
+    {
+        // spawn enemy entities here
+        // var enemyEntity = ECB.Instantiate(GameData.EnemyEntity);                        
+        
+        // Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)((ElapsedTime+1) * 10));            
+        // float rng1 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1 
+        // float rng2 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1             
+        // int rngSign1 = (rng1 < 0) ? -1 : 1;
+        // int rngSign2 = (rng2 < 0) ? -1 : 1;
+
+        // float2 randomPosition = CameraData.Position + new float2(rngSign1 * CameraData.Bounds.x, rngSign2 * CameraData.Bounds.y) + new float2(rng1 * CameraData.BoundsPadding.x, rng2 * CameraData.BoundsPadding.x);                    
+
+        // // float2 position = 
+        // ECB.SetComponent(enemyEntity, new LocalTransform{
+        //     Position = new float3(randomPosition.xy, 0),
+        // });
     }
 }

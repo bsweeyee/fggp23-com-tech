@@ -44,6 +44,7 @@ public struct MovementData : IComponentData
     public float2 Direction;
     public float Speed;
     public float AngularSpeed;
+    public float2 ExternalVelocity;
 }
 
 public struct InputData : IComponentData

@@ -61,13 +61,13 @@ public partial struct PlayerMoveJob : IJobEntity
             // calculate rotation
             inputDirection = math.normalize(inputDirection);
             float iDotRight = math.dot(inputDirection, math.right().xy);
-            if (math.abs(iDotRight) > 0.3f)
+            if (math.abs(iDotRight) > 0.1f)
             {
                 if (math.dot(inputDirection, math.right().xy) >= 0)                                
                     a.z -= DeltaTime * movementData.AngularSpeed;                            
                 else                
                     a.z += DeltaTime * movementData.AngularSpeed;                            
-                movementData.AngularSpeed = math.lerp(0, GameData.PlayerAngularSpeed, DeltaTime * 200.0f);
+                movementData.AngularSpeed = math.lerp(0, GameData.PlayerAngularSpeed, DeltaTime * 100.0f);
                 movementData.Direction = math.lerp(movementData.Direction, inputDirection, DeltaTime * 2.0f);                             
             }
             else
@@ -83,9 +83,10 @@ public partial struct PlayerMoveJob : IJobEntity
             }            
         }        
                 
-        float2 velocity = movementData.Direction * movementData.Speed;        
+        float2 velocity = movementData.Direction * movementData.Speed + movementData.ExternalVelocity;        
         transform.Position.xy += velocity * DeltaTime;
-        transform.Rotation = quaternion.Euler(a);            
+        transform.Rotation = quaternion.Euler(a);        
+        movementData.ExternalVelocity = math.lerp(movementData.ExternalVelocity, new float2(0,0), DeltaTime);
     }
 }
 

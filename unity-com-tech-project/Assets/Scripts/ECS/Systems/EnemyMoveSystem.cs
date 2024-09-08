@@ -6,6 +6,8 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Rendering;
 using System.Threading;
+using Unity.Collections;
+using UnityEditor;
 
 [UpdateAfter(typeof(PlayerMoveSystem))]
 [UpdateBefore(typeof(TransformSystemGroup))]
@@ -14,33 +16,51 @@ public partial struct EnemyMoveSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
-        GameDataComponent gd = SystemAPI.GetSingleton<GameDataComponent>();
-        foreach(var (pTag, pTransform, pAABB) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData>())
+        
+        NativeReference<float2> playerVelocityRef = new NativeReference<float2>(Allocator.TempJob);
+        EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
+        foreach(var (pTag, pTransform, pAABB, pmd, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, MovementData>().WithEntityAccess())
         {
             new EnemyMoveJob {
                 DeltaTime = deltaTime,
-                PlayerTransformData = pTransform,
-                GameData = gd,
+                PlayerTransformData = pTransform,                
             }.Schedule();
 
             new EnemyPlayerCollisionJob {
                 PlayerTransform = pTransform,
-                PlayerBounds = pAABB
-            }.Schedule();            
+                PlayerBounds = pAABB,
+                PlayerVelocityRef = playerVelocityRef,
+                ECB = ecb,
+            }.Schedule();                  
         }
+        state.Dependency.Complete();        
+        ecb.Playback(state.EntityManager);
+
+        float2 pVel = playerVelocityRef.Value;
+        // Debug.Log(pVel);
+        foreach(var (pTag, movementData) in SystemAPI.Query<PlayerTag, RefRW<MovementData>>())
+        {
+            if (math.lengthsq(pVel) > 0)
+                movementData.ValueRW.ExternalVelocity = pVel;        
+        }
+        
+        ecb.Dispose();
+        playerVelocityRef.Dispose();
     }
 }
 
 public partial struct EnemyMoveJob : IJobEntity
 {
     public float DeltaTime;    
-    public LocalToWorld PlayerTransformData;
-    public GameDataComponent GameData;
-    private void Execute(in EnemyTag ptag, ref LocalTransform transform)
+    public LocalToWorld PlayerTransformData;    
+    private void Execute(in EnemyTag ptag, ref LocalTransform transform, ref MovementData md)
     {
         var direction = PlayerTransformData.Position - transform.Position;
         direction = math.normalize(direction);
-        transform.Position += direction * DeltaTime * GameData.EnemyMoveSpeed;
+        
+        md.Direction = new float2(direction.xy);        
+
+        transform.Position += direction * DeltaTime * md.Speed;
     }
 }
 
@@ -48,7 +68,10 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
 {
     public LocalToWorld PlayerTransform;
     public AABBData PlayerBounds;
-    private void Execute(in EnemyTag eTag, in AABBData aabb, in LocalTransform transform)
+    public NativeReference<float2> PlayerVelocityRef;
+    public EntityCommandBuffer ECB;
+    
+    private void Execute(Entity Enemy, in EnemyTag eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
         // check intersection
         float2 tmin = transform.Position.xy + aabb.Min;
@@ -64,7 +87,9 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
         if (collisionX && collisionY)
         {
             // we deal damage to player
-            Debug.Log("collided with player!");
+            PlayerVelocityRef.Value = md.Direction * 10;            
+            ECB.DestroyEntity(Enemy);
+            // Debug.Log("collided with player: " + PlayerVelocityRef.Value);
         }                               
     }
 }

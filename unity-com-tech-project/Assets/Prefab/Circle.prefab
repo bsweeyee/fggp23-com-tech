@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8396756871340718251}
   - component: {fileID: 3721194030101494523}
-  - component: {fileID: 6416616609682095891}
+  - component: {fileID: 7761676937890499408}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -28,8 +28,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -86,7 +86,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &6416616609682095891
+--- !u!114 &7761676937890499408
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -95,7 +95,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 2236951593923482947}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 017b4ece47dbd1840a5b0db96cc398df, type: 3}
+  m_Script: {fileID: 11500000, guid: 11d14b6b276c7d24fa5e709419b56861, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameData: {fileID: 11400000, guid: da483ae29caccde4ea590f15fcd8b7c8, type: 2}

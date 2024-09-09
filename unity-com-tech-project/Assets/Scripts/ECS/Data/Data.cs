@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Entities.Serialization;
+using Unity.Collections;
 
 #region Game Data
 
@@ -12,7 +13,12 @@ using Unity.Entities.Serialization;
 /// This will be the mapping from Unity ScriptableObject into Unity DOTs. It should be a Singleton component data
 /// </summary>
 public struct GameDataComponent : IComponentData
-{    
+{
+    // Game
+    public float2 SpawnRange; // x == min, y == max
+    public int KillsOnFinalWave;
+    public int TotalWaves;
+
     // Player
     public Entity PlayerEntity;
     public float2 PlayerStartPosition;
@@ -38,6 +44,22 @@ public struct GameDataComponent : IComponentData
 }
 
 #endregion
+
+public struct GameStateComponent : IComponentData
+{
+    public int CurrentState; // 0: start, 1: play
+    public int CurrentWaveCount;
+    public int CurrentKills;
+}
+
+[InternalBufferCapacity(256)]
+public struct CurveBufferData : IBufferElementData
+{
+    public static implicit operator float(CurveBufferData e) { return e.Value; }
+    public static implicit operator CurveBufferData(int e) { return new CurveBufferData{ Value = e }; }
+
+    public float Value;
+}
 
 public struct MovementData : IComponentData
 {

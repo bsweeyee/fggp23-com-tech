@@ -5,6 +5,12 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GameData", menuName = "Data/GameData")]
 public class GameDataSO : ScriptableObject
 {
+    [Header("Game setting")]
+    [SerializeField] private AnimationCurve diffultyCurve = AnimationCurve.Constant(0, 1, 1);
+    [SerializeField] private Vector2 spawnRange = new Vector2(100, 1000); // x == min, y == max
+    [SerializeField] private int killsOnFinalWave = 2000;
+    [SerializeField] private int totalWaves = 5;
+
     [Header("Player settings")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private Vector2 playerStartPosition;
@@ -26,6 +32,11 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private float cameraSpeed = 10.0f;
     [SerializeField] private Vector2 cameraBoundsPadding = new Vector2(50, 50);
 
+    public AnimationCurve DifficultyCurve { get { return diffultyCurve; } }
+    public Vector2 SpawnRange { get { return spawnRange; } } // x == min, y == max
+    public int KillsOnFinalWave { get { return killsOnFinalWave; } }
+    public int TotalWaves { get { return totalWaves; } }
+    
     public GameObject PlayerPrefab { get { return playerPrefab; }} 
     public Vector2 PlayerStartPosition { get { return playerStartPosition; }} 
     public float PlayerMoveSpeed { get { return playerMoveSpeed; }} 

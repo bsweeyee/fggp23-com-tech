@@ -5,6 +5,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Entities.Serialization;
+using Unity.Collections;
 
 public class GameAuthoring : MonoBehaviour
 {
@@ -17,15 +18,15 @@ public class GameAuthoring : MonoBehaviour
             {
                 Debug.LogWarning($"{authoring.GetType().ToString()} Missing Game Data scriptable Object");
                 return;
-            }            
+            }
             
             // Game Entity
             Entity gameEntity = GetEntity(TransformUsageFlags.None);            
             Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.Dynamic);
             Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);
             Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.None);            
-            Entity enemyEntity = GetEntity(authoring.GameData.EnemyPrefab, TransformUsageFlags.Dynamic);
-
+            Entity enemyEntity = GetEntity(authoring.GameData.EnemyPrefab, TransformUsageFlags.Dynamic);                        
+            
             AddComponent(gameEntity, new SpawnerData{
                 LastSpawnTime = 0,             
             });
@@ -50,9 +51,26 @@ public class GameAuthoring : MonoBehaviour
                 
                 //Camera
                 CameraEntity = cameraEntity,
-                CameraBoundsPadding = authoring.GameData.CameraBoundsPadding
+                CameraBoundsPadding = authoring.GameData.CameraBoundsPadding,
 
+                // Game
+                SpawnRange = new float2(authoring.GameData.SpawnRange.x, authoring.GameData.SpawnRange.y),
+                KillsOnFinalWave = authoring.GameData.KillsOnFinalWave,
+                TotalWaves = authoring.GameData.TotalWaves,
+            });
+            AddComponent(gameEntity, new GameStateComponent 
+            {
+                CurrentState = 1,
+                CurrentWaveCount = 0,
+                CurrentKills = 0
             });            
+
+            DynamicBuffer<CurveBufferData> difficultyCurveBuffer = AddBuffer<CurveBufferData>(gameEntity);            
+            for (int i=0; i<256; i++)
+            {
+                float output = authoring.GameData.DifficultyCurve.Evaluate((float)i/256.0f);
+                difficultyCurveBuffer.Add(new CurveBufferData{ Value = output });
+            }                     
             Debug.Log("game authoring baked");            
         }
     }    

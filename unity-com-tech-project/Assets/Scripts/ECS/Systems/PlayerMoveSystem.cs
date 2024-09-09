@@ -44,7 +44,12 @@ public partial struct PlayerMoveJob : IJobEntity
         float l = math.lengthsq(inputDirection);
         if (l <= 0.01f) 
         {
-            // TODO BUG: we want to reset Angular speed to 0 immediately if previous movement direction is a forward or backwards otherwise the unfinished AngularSpeeds will carry over and make movement feel weird                         
+            // we want to reset Angular speed to 0 immediately if previous movement direction is a forward or backwards otherwise the unfinished AngularSpeeds will carry over and make movement feel weird
+            if (math.abs(math.dot(inputData.PreviousDirection, math.up().xy)) >= 0.99f)
+            {
+                movementData.AngularSpeed = 0;
+            }
+            
             if (math.lengthsq(movementData.Direction) >= 0.01)
             {
                 if (math.dot(movementData.Direction, math.right().xy) >= 0) 

@@ -12,7 +12,8 @@ using UnityEngine.Rendering.Universal;
 public partial class GameSystem : SystemBase
 {
     private GameInput InputActions;
-    private Entity Player;    
+    private Entity PlayerEntity;
+    private Entity GameDataEntity;    
 
     protected override void OnCreate()
     {
@@ -27,36 +28,35 @@ public partial class GameSystem : SystemBase
         base.OnStartRunning();            
         InputActions.Enable();        
         InputActions.Gameplay.Shoot.performed += OnShoot;
-        InputActions.Gameplay.Shoot.canceled += OnShootCancel;
+        InputActions.Gameplay.Shoot.canceled += OnShootCancel;                
 
-        GameDataComponent gdc;        
-
-        foreach (var gd in SystemAPI.Query<GameDataComponent>())
+        GameDataComponent gdc;
+        foreach (var (gd, entity) in SystemAPI.Query<GameDataComponent>().WithEntityAccess())
         {
+            GameDataEntity = entity;
             gdc = gd;
 
             var playerEntity = EntityManager.Instantiate(gd.PlayerEntity);            
             var playerTransform = SystemAPI.GetComponentRW<LocalTransform>(playerEntity);
             playerTransform.ValueRW.Position.xy = gd.PlayerStartPosition;
 
-            Player = playerEntity;            
+            PlayerEntity = playerEntity;            
             SystemAPI.SetSingleton(gd);
             
             var cameraEntity = EntityManager.Instantiate(gd.CameraEntity);
             var ce = SystemAPI.GetComponent<CameraData>(cameraEntity);                               
             SystemAPI.SetSingleton(ce);
         }
-
         
         Debug.Log("start running");                
     }
 
     protected override void OnUpdate()
     {                
-        if (SystemAPI.Exists(Player))
+        if (SystemAPI.Exists(PlayerEntity))
         {
             Vector2 moveInput = InputActions.Gameplay.Move.ReadValue<Vector2>();        
-            RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);            
+            RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(PlayerEntity);            
             pmi.ValueRW.PreviousDirection = pmi.ValueRW.Direction;
             pmi.ValueRW.Direction = moveInput;
             
@@ -69,13 +69,17 @@ public partial class GameSystem : SystemBase
             {
                 s = 2;
             }
-            pmi.ValueRW.InputState = s;                        
+            pmi.ValueRW.InputState = s;
+                    
+            // DynamicBuffer<CurveBufferData> cbd = SystemAPI.GetBuffer<CurveBufferData>(GameDataEntity);
+            // curveutility.evaluate(0.3333f, cbd);
         }
         
-        // TODO maybe use a dedicate spawn job?
-        var gdEntity = SystemAPI.GetSingletonEntity<GameDataComponent>();
-        var gameData = SystemAPI.GetComponent<GameDataComponent>(gdEntity);        
-        var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(gdEntity);
+        // TODO maybe use a dedicate spawn job?        
+        var gameData = SystemAPI.GetComponent<GameDataComponent>(GameDataEntity);        
+        var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(GameDataEntity);
+        var gameState = SystemAPI.GetComponent<GameStateComponent>(GameDataEntity);        
+        var diffcultyCurve = SystemAPI.GetBuffer<CurveBufferData>(GameDataEntity);
 
         var cameraEntity = SystemAPI.GetSingletonEntity<CameraData>();
         var cameraData = SystemAPI.GetComponent<CameraData>(cameraEntity);
@@ -100,10 +104,11 @@ public partial class GameSystem : SystemBase
                 Position = new float3(randomPosition.xy, 0),
                 Rotation = lt.Rotation,
                 Scale = lt.Scale
-        });         
-            
+            });                     
             spawnerData.ValueRW.LastSpawnTime = SystemAPI.Time.ElapsedTime;                                
-        }        
+        }
+
+        Debug.Log($"{gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
     }
 
     protected override void OnStopRunning()
@@ -111,22 +116,22 @@ public partial class GameSystem : SystemBase
         base.OnStopRunning();
 
         InputActions.Disable();
-        Player = Entity.Null;        
+        PlayerEntity = Entity.Null;        
     }
 
     private void OnShootCancel(InputAction.CallbackContext context)
     {
-       if (!SystemAPI.Exists(Player)) return;
+       if (!SystemAPI.Exists(PlayerEntity)) return;
 
-        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);        
+        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(PlayerEntity);        
         pmi.ValueRW.InputState = 3;
     }
 
     private void OnShoot(InputAction.CallbackContext context)
     {
-        if (!SystemAPI.Exists(Player)) return;
+        if (!SystemAPI.Exists(PlayerEntity)) return;
 
-        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);                
+        RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(PlayerEntity);                
         pmi.ValueRW.InputState = 1;        
     }
 }

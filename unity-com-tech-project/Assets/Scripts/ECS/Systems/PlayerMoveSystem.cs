@@ -43,9 +43,8 @@ public partial struct PlayerMoveJob : IJobEntity
         float3 a = math.Euler(transform.Rotation);        
         float l = math.lengthsq(inputDirection);
         if (l <= 0.01f) 
-        {            
-            float ls = math.lerp(movementData.AngularSpeed, 0, DeltaTime);
-            
+        {
+            // TODO BUG: we want to reset Angular speed to 0 immediately if previous movement direction is a forward or backwards otherwise the unfinished AngularSpeeds will carry over and make movement feel weird                         
             if (math.lengthsq(movementData.Direction) >= 0.01)
             {
                 if (math.dot(movementData.Direction, math.right().xy) >= 0) 
@@ -53,7 +52,10 @@ public partial struct PlayerMoveJob : IJobEntity
                 else                
                     a.z += DeltaTime * movementData.AngularSpeed;                        
             }
-            movementData.AngularSpeed = math.lerp(movementData.AngularSpeed, 0, DeltaTime * 2.0f);            
+            // TODO we want Angular speed to reduce by a better frictional based coefficient
+            movementData.AngularSpeed = math.lerp(movementData.AngularSpeed, 0, DeltaTime * 5.0f);            
+            
+            // TODO we want to reduce direction by a better frictional based coefficient instead of DeltaTime maybe
             movementData.Direction = math.lerp(movementData.Direction, new float2(0,0), DeltaTime * 2.0f); 
         }
         else
@@ -66,7 +68,9 @@ public partial struct PlayerMoveJob : IJobEntity
                 if (math.dot(inputDirection, math.right().xy) >= 0)                                
                     a.z -= DeltaTime * movementData.AngularSpeed;                            
                 else                
-                    a.z += DeltaTime * movementData.AngularSpeed;                            
+                    a.z += DeltaTime * movementData.AngularSpeed;                                                
+                
+                // TODO: we want Angular Speed to increase slowly at start and ramp up as player hold the button longer
                 movementData.AngularSpeed = math.lerp(0, GameData.PlayerAngularSpeed, DeltaTime * 100.0f);
                 movementData.Direction = math.lerp(movementData.Direction, inputDirection, DeltaTime * 2.0f);                             
             }
@@ -78,14 +82,17 @@ public partial struct PlayerMoveJob : IJobEntity
                 else                
                     movementData.Direction = transform.Up().xy;                             
                 
-                movementData.AngularSpeed = 0;
+                // TODO reduce Angular speed by some frictional based coefficient
+                movementData.AngularSpeed = math.lerp(movementData.AngularSpeed, 0, DeltaTime * 5.0f);
                 movementData.Direction = math.normalize(movementData.Direction);
             }            
         }        
                 
         float2 velocity = movementData.Direction * movementData.Speed + movementData.ExternalVelocity;        
         transform.Position.xy += velocity * DeltaTime;
-        transform.Rotation = quaternion.Euler(a);        
+        transform.Rotation = quaternion.Euler(a);
+
+        // TODO Reduce external velocity by some coefficient        
         movementData.ExternalVelocity = math.lerp(movementData.ExternalVelocity, new float2(0,0), DeltaTime);
     }
 }

@@ -14,7 +14,7 @@ using UnityEngine.EventSystems;
 [UpdateBefore(typeof(TransformSystemGroup))]
 public partial struct PlayerMoveSystem : ISystem
 {
-    // [BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime;
@@ -90,8 +90,10 @@ public partial struct PlayerMoveJob : IJobEntity
     }
 }
 
+[BurstCompile]
 public partial struct PlayerCalculateAABB : IJobEntity
 {
+    [BurstCompile]
     private void Execute(in PlayerTag playerTag, in LocalToWorld playerLTW, ref AABBData aabb)
     {                
         float nR = math.abs(math.dot(math.normalize(playerLTW.Up), math.normalize(math.right())));

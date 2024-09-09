@@ -33,9 +33,9 @@ public class PlayerAuthoring : MonoBehaviour
                 LastFireTime = 0,
             });
             AddComponent(playerEntity, new AABBData {
-                Min = new float2(-size.x/2, -size.y/2) * srScale.x/2,
-                Max = new float2(size.x/2, size.y/2) * srScale.y/2,
-                OriginalSize = new float2(size.x, size.y),
+                Min = new float2(-size.x/2 * srScale.x/2, -size.y/2 * srScale.y/2),
+                Max = new float2(size.x/2 * srScale.x/2, size.y/2 * srScale.y/2),
+                OriginalSize = new float2(size.x * srScale.x/2, size.y * srScale.x/2),
             });
             
             Debug.Log("player authoring baked");

@@ -22,9 +22,9 @@ public class EnemyAuthoring : MonoBehaviour
                 Speed = authoring.GameData.EnemyMoveSpeed,
             });
             AddComponent(e, new AABBData {
-                Min = new float2(-sr.bounds.size.x/2, -sr.bounds.size.y/2) * srScale.x/2,
-                Max = new float2(sr.bounds.size.x/2, sr.bounds.size.y/2) * srScale.y/2,
-                OriginalSize = new float2(sr.bounds.size.x, sr.bounds.size.y),
+                Min = new float2(-sr.bounds.size.x/2 * srScale.x/2, -sr.bounds.size.y/2 * srScale.y/2),
+                Max = new float2(sr.bounds.size.x/2 * srScale.x/2, sr.bounds.size.y/2 * srScale.y/2),
+                OriginalSize = new float2(sr.bounds.size.x * srScale.x/2, sr.bounds.size.y * srScale.x/2),
             });
         }
     }

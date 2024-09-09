@@ -71,7 +71,7 @@ public partial class GameSystem : SystemBase
             pmi.ValueRW.InputState = s;                        
         }
         
-        // spawn job
+        // TODO maybe use a dedicate spawn job?
         var gdEntity = SystemAPI.GetSingletonEntity<GameDataComponent>();
         var gameData = SystemAPI.GetComponent<GameDataComponent>(gdEntity);        
         var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(gdEntity);
@@ -94,10 +94,11 @@ public partial class GameSystem : SystemBase
             float2 nDir = math.normalize(direction);
 
             float2 randomPosition = cameraData.Position + nDir * math.length(cameraData.Bounds);
+            var lt = SystemAPI.GetComponent<LocalTransform>(enemyEntity);        
             SystemAPI.SetComponent(enemyEntity, new LocalTransform {
                 Position = new float3(randomPosition.xy, 0),
-                Rotation = quaternion.identity,
-                Scale = 1
+                Rotation = lt.Rotation,
+                Scale = lt.Scale
         });         
             
             spawnerData.ValueRW.LastSpawnTime = SystemAPI.Time.ElapsedTime;                                

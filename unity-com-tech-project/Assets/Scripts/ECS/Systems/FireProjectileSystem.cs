@@ -2,19 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Transforms;
-using Unity.Mathematics;
-using UnityEngine;
-using UnityEditor.Search;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(TransformSystemGroup))]
 public partial struct FireProjectileSystem : ISystem
-{
+{    
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         var gameData = SystemAPI.GetSingleton<GameDataComponent>();
-
+        var projectileTransform = SystemAPI.GetComponent<LocalTransform>(gameData.ProjectileEntity);
 
         foreach(var (localToWorld, transform, shooterData, inputData, mvd) in SystemAPI.Query<LocalToWorld, LocalTransform, RefRW<ProjectileShooterData>, RefRW<InputData>, MovementData>().WithAll<ProjectileShooterData>())
         {
@@ -24,9 +21,12 @@ public partial struct FireProjectileSystem : ISystem
             if (isShooting && isCooldownDone)
             {
                 var newProjectile = ecb.Instantiate(gameData.ProjectileEntity);
-                var projectileTransform = LocalTransform.FromPositionRotation(transform.Position,transform.Rotation);
                 
-                ecb.SetComponent(newProjectile, projectileTransform);
+                ecb.SetComponent(newProjectile, new LocalTransform{
+                    Position = transform.Position,
+                    Rotation = projectileTransform.Rotation,
+                    Scale = projectileTransform.Scale
+                });
                 // TODO check how to retrieve baked speed values
                 ecb.SetComponent(newProjectile, new MovementData 
                 { 

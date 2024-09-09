@@ -7,7 +7,7 @@ public class GameDataSO : ScriptableObject
 {
     [Header("Game setting")]
     [SerializeField] private AnimationCurve diffultyCurve = AnimationCurve.Constant(0, 1, 1);
-    [SerializeField] private Vector2 spawnRange = new Vector2(100, 1000); // x == min, y == max
+    [SerializeField] private Vector2 spawnCount = new Vector2(100, 1000); // x == min, y == max
     [SerializeField] private int killsOnFinalWave = 2000;
     [SerializeField] private int totalWaves = 5;
 
@@ -33,7 +33,7 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private Vector2 cameraBoundsPadding = new Vector2(50, 50);
 
     public AnimationCurve DifficultyCurve { get { return diffultyCurve; } }
-    public Vector2 SpawnRange { get { return spawnRange; } } // x == min, y == max
+    public Vector2 SpawnCount { get { return spawnCount; } } // x == min, y == max
     public int KillsOnFinalWave { get { return killsOnFinalWave; } }
     public int TotalWaves { get { return totalWaves; } }
     

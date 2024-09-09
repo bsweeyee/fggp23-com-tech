@@ -54,7 +54,7 @@ public class GameAuthoring : MonoBehaviour
                 CameraBoundsPadding = authoring.GameData.CameraBoundsPadding,
 
                 // Game
-                SpawnRange = new float2(authoring.GameData.SpawnRange.x, authoring.GameData.SpawnRange.y),
+                SpawnCount = authoring.GameData.SpawnCount,
                 KillsOnFinalWave = authoring.GameData.KillsOnFinalWave,
                 TotalWaves = authoring.GameData.TotalWaves,
             });

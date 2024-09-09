@@ -15,7 +15,7 @@ using Unity.Collections;
 public struct GameDataComponent : IComponentData
 {
     // Game
-    public float2 SpawnRange; // x == min, y == max
+    public float2 SpawnCount; // x == min, y == max
     public int KillsOnFinalWave;
     public int TotalWaves;
 

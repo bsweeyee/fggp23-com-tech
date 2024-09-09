@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -75,7 +76,7 @@ public partial class GameSystem : SystemBase
             // curveutility.evaluate(0.3333f, cbd);
         }
         
-        // TODO maybe use a dedicate spawn job?        
+        // TODO parallelize spawn job?
         var gameData = SystemAPI.GetComponent<GameDataComponent>(GameDataEntity);        
         var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(GameDataEntity);
         var gameState = SystemAPI.GetComponent<GameStateComponent>(GameDataEntity);        
@@ -87,28 +88,43 @@ public partial class GameSystem : SystemBase
         double t = SystemAPI.Time.ElapsedTime - spawnerData.ValueRO.LastSpawnTime;
         // Debug.Log($"{t}, {SystemAPI.Time.ElapsedTime}, {spawnerData.ValueRO.LastSpawnTime}");                 
         if (t > gameData.SpawnEnemyRate)
-        {            
-            var enemyEntity = EntityManager.Instantiate(gameData.EnemyEntity);                        
-        
-            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)((SystemAPI.Time.ElapsedTime+1) * 10));            
+        {
+            float wt = (float)gameState.CurrentWaveCount / (float)gameData.TotalWaves;
+            float n = gameData.SpawnCount.x + gameData.SpawnCount.y * curveutility.evaluate(wt, diffcultyCurve);
+            
+            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)((SystemAPI.Time.ElapsedTime+999) * 10));            
             random.NextFloat();
-            float rng1 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1 
-            float rng2 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1
+            for (int i=0; i<n; i++)
+            {
+                var enemyEntity = EntityManager.Instantiate(gameData.EnemyEntity);                        
+            
+                float rng1 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1 
+                float rng2 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1                
+                float s = math.sign(rng2);
+                float2 offset = new float2(0, 0);                
 
-            float2 direction = new float2(rng1, rng2);
-            float2 nDir = math.normalize(direction);
+                // TODO make spawning more randomised over an area
+                if (s > 0)
+                {
+                    offset =new float2(math.sign(rng1) * cameraData.Bounds.x/2, rng1 * (cameraData.Bounds.y/2) + rng1 * cameraData.BoundsPadding.y);
+                }
+                else
+                {
+                    offset =new float2(rng1 * (cameraData.Bounds.x/2) + rng1 * cameraData.BoundsPadding.x/2, math.sign(rng1) * cameraData.Bounds.y/2);
+                }
 
-            float2 randomPosition = cameraData.Position + nDir * math.length(cameraData.Bounds);
-            var lt = SystemAPI.GetComponent<LocalTransform>(enemyEntity);        
-            SystemAPI.SetComponent(enemyEntity, new LocalTransform {
-                Position = new float3(randomPosition.xy, 0),
-                Rotation = lt.Rotation,
-                Scale = lt.Scale
-            });                     
+                // float2 randomPosition = cameraData.Position + nDir * math.length(cameraData.Bounds);
+                float2 randomPosition = cameraData.Position + offset;
+                var lt = SystemAPI.GetComponent<LocalTransform>(enemyEntity);        
+                SystemAPI.SetComponent(enemyEntity, new LocalTransform {
+                    Position = new float3(randomPosition.xy, 0),
+                    Rotation = lt.Rotation,
+                    Scale = lt.Scale
+                });                     
+            }
             spawnerData.ValueRW.LastSpawnTime = SystemAPI.Time.ElapsedTime;                                
+        Debug.Log($"{n}, {gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
         }
-
-        Debug.Log($"{gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
     }
 
     protected override void OnStopRunning()

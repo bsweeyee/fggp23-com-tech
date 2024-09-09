@@ -57,6 +57,7 @@ public partial class GameSystem : SystemBase
         {
             Vector2 moveInput = InputActions.Gameplay.Move.ReadValue<Vector2>();        
             RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(Player);            
+            pmi.ValueRW.PreviousDirection = pmi.ValueRW.Direction;
             pmi.ValueRW.Direction = moveInput;
             
             var s = pmi.ValueRO.InputState;

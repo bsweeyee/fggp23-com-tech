@@ -50,6 +50,7 @@ public struct MovementData : IComponentData
 public struct InputData : IComponentData
 {
     public float2 Direction;
+    public float2 PreviousDirection;
     public int InputState; // 0: none, 1: pressed, 2: held, 3: released 
 }
 

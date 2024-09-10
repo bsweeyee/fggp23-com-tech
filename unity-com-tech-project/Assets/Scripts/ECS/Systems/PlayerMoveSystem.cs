@@ -23,11 +23,11 @@ public partial struct PlayerMoveSystem : ISystem
         {
             DeltaTime = deltaTime,
             GameData = gc
-        }.Schedule();
+        }.ScheduleParallel();
 
         new PlayerCalculateAABB
         {
-        }.Schedule();
+        }.ScheduleParallel();
     }
 }
 

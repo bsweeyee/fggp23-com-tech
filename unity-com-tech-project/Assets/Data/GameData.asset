@@ -36,14 +36,15 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  spawnCount: {x: 10, y: 20}
+  spawnCount: {x: 10, y: 10}
   killsOnFinalWave: 500
-  totalWaves: 10
+  totalWaves: 1
   playerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
     type: 3}
   playerStartPosition: {x: 0, y: 0}
   playerMoveSpeed: 10
   playerAngularSpeed: 7
+  initialNumOfShots: 100
   enemyPrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
     type: 3}
   enemySpawnRate: 2

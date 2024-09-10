@@ -29,7 +29,7 @@ public partial struct ProjectileMoveSystem : ISystem
             {
                 DeltaTime = deltaTime,                
             };
-            moveJob.Schedule();            
+            moveJob.ScheduleParallel();            
         } 
         
         //destroy entities when hit camera bounds

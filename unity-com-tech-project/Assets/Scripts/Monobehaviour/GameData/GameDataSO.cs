@@ -16,7 +16,7 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private Vector2 playerStartPosition;
     [SerializeField] private float playerMoveSpeed;
     [SerializeField] private float playerAngularSpeed = 10.0f;    
-    [SerializeField] private int initialNumOfShots = 3;    
+    [Range(1, 1000)][SerializeField] private int initialNumOfShots = 3;    
 
     [Header("Enemy settings")]
     [SerializeField] private GameObject enemyPrefab;

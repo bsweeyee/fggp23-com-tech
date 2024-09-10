@@ -63,6 +63,14 @@ public struct CurveBufferData : IBufferElementData
     public float Value;
 }
 
+public struct CollisionObjectBufferData : IBufferElementData
+{
+    public float3 Position;
+    public float2 AABBMin;
+    public float2 AABBMax;
+    public bool IsChecked;
+}
+
 public struct MovementData : IComponentData
 {
     public float2 Direction;
@@ -116,3 +124,8 @@ public struct AABBData : IComponentData
     public float2 Max;
     public float2 OriginalSize;
 }
+
+// public struct ProjectileCollisionChecks : IComponentData
+// {
+    
+// }

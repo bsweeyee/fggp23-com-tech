@@ -37,6 +37,7 @@ public class GameAuthoring : MonoBehaviour
                 PlayerStartPosition = authoring.GameData.PlayerStartPosition,
                 PlayerMoveSpeed = authoring.GameData.PlayerMoveSpeed,
                 PlayerAngularSpeed = authoring.GameData.PlayerAngularSpeed,
+                PlayerNumberOfShots = authoring.GameData.InitialNumberOfShots,
 
                 // Projectile
                 ProjectileEntity = projectileEntity,
@@ -61,7 +62,7 @@ public class GameAuthoring : MonoBehaviour
             AddComponent(gameEntity, new GameStateComponent 
             {
                 CurrentState = 1,
-                CurrentWaveCount = 0,
+                CurrentWaveCount = 1,
                 CurrentKills = 0
             });            
 

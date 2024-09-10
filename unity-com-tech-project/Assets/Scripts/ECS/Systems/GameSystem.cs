@@ -62,14 +62,8 @@ public partial class GameSystem : SystemBase
             pmi.ValueRW.Direction = moveInput;
             
             var s = pmi.ValueRO.InputState;
-            if (s == 3)
-            {
-                s = 0;
-            }
-            if (s == 1)
-            {
-                s = 2;
-            }
+            if (s == 3) s = 0;            
+            if (s == 1) s = 2;            
             pmi.ValueRW.InputState = s;
                     
             // DynamicBuffer<CurveBufferData> cbd = SystemAPI.GetBuffer<CurveBufferData>(GameDataEntity);
@@ -86,35 +80,35 @@ public partial class GameSystem : SystemBase
         var cameraData = SystemAPI.GetComponent<CameraData>(cameraEntity);
 
         double t = SystemAPI.Time.ElapsedTime - spawnerData.ValueRO.LastSpawnTime;
-        // Debug.Log($"{t}, {SystemAPI.Time.ElapsedTime}, {spawnerData.ValueRO.LastSpawnTime}");                 
         if (t > gameData.SpawnEnemyRate)
         {
             float wt = (float)gameState.CurrentWaveCount / (float)gameData.TotalWaves;
-            float n = gameData.SpawnCount.x + gameData.SpawnCount.y * curveutility.evaluate(wt, diffcultyCurve);
+            float n = gameData.SpawnCount.x + gameData.SpawnCount.y * curveutility.evaluate(wt, diffcultyCurve);            
+            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)gameState.SystemCurrentTime);            
             
-            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)((SystemAPI.Time.ElapsedTime+999) * 10));            
-            random.NextFloat();
             for (int i=0; i<n; i++)
             {
                 var enemyEntity = EntityManager.Instantiate(gameData.EnemyEntity);                        
             
-                float rng1 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1 
-                float rng2 = random.NextFloat() * 2 - 1; // gives a value between -1 to 1                
-                float s = math.sign(rng2);
-                float2 offset = new float2(0, 0);                
-
-                // TODO make spawning more randomised over an area
-                if (s > 0)
+                float rng1 = (random.NextFloat() * 2) - 1; // gives a value between -1 to 1 
+                float rng2 = (random.NextFloat() * 2) - 1; // gives a value between -1 to 1                
+                float rng3 = (random.NextFloat() * 2) - 1; // gives a value between -1 to 1                
+                
+                int s1 = (int)math.sign(rng1); 
+                int s2 = (int)math.sign(rng2);                
+                float2 offset = new float2(0, 0);
+                
+                if (s2 > 0)
                 {
-                    offset =new float2(math.sign(rng1) * cameraData.Bounds.x/2, rng1 * (cameraData.Bounds.y/2) + rng1 * cameraData.BoundsPadding.y);
+                    offset = new float2(s1 * cameraData.Bounds.x/2 + rng1 * cameraData.BoundsPadding.x, rng3 * cameraData.Bounds.y/2);                    
                 }
                 else
                 {
-                    offset =new float2(rng1 * (cameraData.Bounds.x/2) + rng1 * cameraData.BoundsPadding.x/2, math.sign(rng1) * cameraData.Bounds.y/2);
+                    offset = new float2(rng3 * cameraData.Bounds.x/2, s1 * cameraData.Bounds.y/2 + rng1 * cameraData.BoundsPadding.y);
                 }
-
+                                
                 // float2 randomPosition = cameraData.Position + nDir * math.length(cameraData.Bounds);
-                float2 randomPosition = cameraData.Position + offset;
+                float2 randomPosition = cameraData.Position + offset;            
                 var lt = SystemAPI.GetComponent<LocalTransform>(enemyEntity);        
                 SystemAPI.SetComponent(enemyEntity, new LocalTransform {
                     Position = new float3(randomPosition.xy, 0),
@@ -123,7 +117,7 @@ public partial class GameSystem : SystemBase
                 });                     
             }
             spawnerData.ValueRW.LastSpawnTime = SystemAPI.Time.ElapsedTime;                                
-        Debug.Log($"{n}, {gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
+            // Debug.Log($"{n}, {gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
         }
     }
 

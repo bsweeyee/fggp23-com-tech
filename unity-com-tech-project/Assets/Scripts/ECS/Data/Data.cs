@@ -24,6 +24,7 @@ public struct GameDataComponent : IComponentData
     public float2 PlayerStartPosition;
     public float PlayerMoveSpeed;
     public float PlayerAngularSpeed;
+    public int PlayerNumberOfShots;
 
     // Projectile
     public Entity ProjectileEntity;
@@ -50,6 +51,7 @@ public struct GameStateComponent : IComponentData
     public int CurrentState; // 0: start, 1: play
     public int CurrentWaveCount;
     public int CurrentKills;
+    public long SystemCurrentTime;
 }
 
 [InternalBufferCapacity(256)]

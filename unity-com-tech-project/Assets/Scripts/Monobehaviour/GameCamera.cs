@@ -4,8 +4,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEditor.Rendering;
-using UnityEngine.U2D.IK;
+using System;
 
 public class GameCamera : MonoBehaviour
 {
@@ -22,9 +21,26 @@ public class GameCamera : MonoBehaviour
         pe = playerQuery.GetSingletonEntity();
 
         var cameraQuery = em.CreateEntityQuery(ComponentType.ReadOnly<CameraData>());
-        cd = cameraQuery.GetSingletonEntity();        
+        cd = cameraQuery.GetSingletonEntity();
+
+        var gameStateQuery = em.CreateEntityQuery(ComponentType.ReadOnly<GameStateComponent>());
+        var gs = gameStateQuery.GetSingletonEntity();
 
         cam = GetComponent<Camera>();
+
+        CameraData camData = em.GetComponentData<CameraData>(cd);
+        camData.Position = new float2(transform.position.x, transform.position.y);
+        
+        float aspect = (float)Screen.width / (float) Screen.height;
+        float worldHeight = cam.orthographicSize * 2;
+        float worldWidth = worldHeight * aspect;
+        camData.Bounds = new float2(worldWidth, worldHeight);
+
+        em.SetComponentData(cd, camData);
+        
+        GameStateComponent gameStateData = em.GetComponentData<GameStateComponent>(gs);
+        gameStateData.SystemCurrentTime = DateTime.Now.Ticks;
+        em.SetComponentData(gs, gameStateData);
     }    
 
     void Update()
@@ -38,16 +54,14 @@ public class GameCamera : MonoBehaviour
         var length = direction.magnitude;        
 
         transform.position += Vector3.Lerp(Vector3.zero, direction * gameData.CameraSpeed * Time.deltaTime, Mathf.InverseLerp(0, 2.0f, length));
-        // Debug.Log($"player transform: {localTransform.Position}");
-
+        // Debug.Log($"player transform: {localTransform.Position}"); 
         CameraData camData = em.GetComponentData<CameraData>(cd);
-        camData.Position = new float2(transform.position.x, transform.position.y);
-        
-        float aspect = (float)Screen.width / (float) Screen.height;
-        float worldHeight = cam.orthographicSize * 2;
-        float worldWidth = worldHeight * aspect;
-        camData.Bounds = new float2(worldWidth, worldHeight);
-
-        em.SetComponentData(cd, camData);
+        var position = new float2(transform.position.x, transform.position.y);
+        em.SetComponentData(cd, new CameraData
+        {
+            Position = position,
+            Bounds = camData.Bounds,
+            BoundsPadding = camData.BoundsPadding                            
+        });            
     }    
 }

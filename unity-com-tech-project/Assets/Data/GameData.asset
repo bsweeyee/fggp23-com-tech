@@ -38,7 +38,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   spawnCount: {x: 10, y: 20}
   killsOnFinalWave: 500
-  totalWaves: 5
+  totalWaves: 10
   playerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
     type: 3}
   playerStartPosition: {x: 0, y: 0}
@@ -55,4 +55,4 @@ MonoBehaviour:
   cameraPrefab: {fileID: 1386376870701149531, guid: 94f477ad37e164b4781a0e604484323f,
     type: 3}
   cameraSpeed: 10
-  cameraBoundsPadding: {x: 40, y: 40}
+  cameraBoundsPadding: {x: 30, y: 30}

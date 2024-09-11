@@ -23,8 +23,7 @@ public class GameAuthoring : MonoBehaviour
             // Game Entity
             Entity gameEntity = GetEntity(TransformUsageFlags.None);            
             Entity playerEntity = GetEntity(authoring.GameData.PlayerPrefab, TransformUsageFlags.Dynamic);
-            Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);
-            Entity cameraEntity = GetEntity(authoring.GameData.CameraPrefab, TransformUsageFlags.None);            
+            Entity projectileEntity = GetEntity(authoring.GameData.ProjectilePrefab, TransformUsageFlags.Dynamic);            
             Entity enemyEntity = GetEntity(authoring.GameData.EnemyPrefab, TransformUsageFlags.Dynamic);                        
             
             AddComponent(gameEntity, new SpawnerData{
@@ -49,9 +48,7 @@ public class GameAuthoring : MonoBehaviour
                 EnemyMoveSpeed = authoring.GameData.EnemyMoveSpeed,
                 SpawnEnemyStartPosition = authoring.GameData.EnemyMoveSpeed,
                 SpawnEnemyRate = authoring.GameData.EnemySpawnRate,
-                
-                //Camera
-                CameraEntity = cameraEntity,
+                                
                 CameraBoundsPadding = authoring.GameData.CameraBoundsPadding,
 
                 // Game
@@ -64,7 +61,11 @@ public class GameAuthoring : MonoBehaviour
                 CurrentState = 1,
                 CurrentWaveCount = 1,
                 CurrentKills = 0
-            });            
+            });
+            AddComponent(gameEntity, new CameraData
+            {
+                BoundsPadding = authoring.GameData.CameraBoundsPadding,                
+            });
 
             DynamicBuffer<CurveBufferData> difficultyCurveBuffer = AddBuffer<CurveBufferData>(gameEntity);            
             for (int i=0; i<256; i++)

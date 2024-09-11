@@ -44,6 +44,7 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
 }
 
 [BurstCompile]
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct EnemyProjectileCollisionJob : IJobEntity
 {
     public LocalToWorld ProjectileTransform;
@@ -57,8 +58,10 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
     public GameDataComponent GDC; 
     
     [BurstCompile]
-    private void Execute(Entity Enemy, in EnemyTag eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
+    private void Execute(Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
+        if (eTag.ValueRO == false) return;
+        
         // check intersection
         float2 tmin = transform.Position.xy + aabb.Min;
         float2 tmax = transform.Position.xy + aabb.Max;
@@ -74,8 +77,8 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
         if (collisionX && collisionY)
         {
             // we deal damage to player
-            ECB.DestroyEntity(Enemy);
-            ECB.DestroyEntity(ProjectileEntity);
+            ECB.SetComponentEnabled<EnemyTag>(Enemy, false);
+            ECB.SetComponentEnabled<ProjectileTag>(ProjectileEntity, false);
 
             GSC.CurrentKills += 1;
             

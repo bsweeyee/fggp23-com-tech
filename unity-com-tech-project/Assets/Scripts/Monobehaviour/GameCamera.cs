@@ -39,7 +39,7 @@ public class GameCamera : MonoBehaviour
         em.SetComponentData(cd, camData);
         
         GameStateComponent gameStateData = em.GetComponentData<GameStateComponent>(gs);
-        gameStateData.SystemCurrentTime = DateTime.Now.Ticks;
+        gameStateData.SystemTimeWhenGameStarted = DateTime.Now.Ticks;
         em.SetComponentData(gs, gameStateData);
     }    
 

@@ -48,8 +48,10 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
     public EntityCommandBuffer ECB;
     
     [BurstCompile]
-    private void Execute(Entity Enemy, in EnemyTag eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
+    private void Execute(Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
+         if (eTag.ValueRO == false) return;
+         
         // check intersection
         float2 tmin = transform.Position.xy + aabb.Min;
         float2 tmax = transform.Position.xy + aabb.Max;

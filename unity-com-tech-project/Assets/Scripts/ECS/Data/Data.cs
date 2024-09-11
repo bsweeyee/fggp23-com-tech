@@ -35,8 +35,7 @@ public struct GameDataComponent : IComponentData
     public float2 SpawnEnemyStartPosition;
     public double SpawnEnemyRate;
 
-    // Camera
-    public Entity CameraEntity;
+    // Camera    
     public float2 CameraBoundsPadding;    
 
     // Enemy
@@ -51,7 +50,7 @@ public struct GameStateComponent : IComponentData
     public int CurrentState; // 0: start, 1: play
     public int CurrentWaveCount;
     public int CurrentKills;
-    public long SystemCurrentTime;
+    public long SystemTimeWhenGameStarted;
 }
 
 [InternalBufferCapacity(256)]
@@ -61,14 +60,6 @@ public struct CurveBufferData : IBufferElementData
     public static implicit operator CurveBufferData(int e) { return new CurveBufferData{ Value = e }; }
 
     public float Value;
-}
-
-public struct CollisionObjectBufferData : IBufferElementData
-{
-    public float3 Position;
-    public float2 AABBMin;
-    public float2 AABBMax;
-    public bool IsChecked;
 }
 
 public struct MovementData : IComponentData
@@ -98,11 +89,11 @@ public struct PlayerTag : IComponentData
 }
 #endregion
 
-public struct ProjectileTag : IComponentData
+public struct ProjectileTag : IComponentData, IEnableableComponent
 {
 }
 
-public struct EnemyTag : IComponentData
+public struct EnemyTag : IComponentData, IEnableableComponent
 {    
 }
 
@@ -124,8 +115,3 @@ public struct AABBData : IComponentData
     public float2 Max;
     public float2 OriginalSize;
 }
-
-// public struct ProjectileCollisionChecks : IComponentData
-// {
-    
-// }

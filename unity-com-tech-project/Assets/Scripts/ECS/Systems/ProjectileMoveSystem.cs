@@ -36,7 +36,7 @@ public partial struct ProjectileMoveSystem : ISystem
         var destroyJob = new ProjectileDestroyJob
         {
             CameraData = cd,
-            CommandBuffer = ecb,
+            ECB = ecb,
         };                 
         destroyJob.Schedule();            
 
@@ -56,13 +56,14 @@ public partial struct ProjectileMoveSystem : ISystem
 }
 
 [BurstCompile]
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct ProjectileDestroyJob : IJobEntity
 {
     public CameraData CameraData;
-    public EntityCommandBuffer CommandBuffer;
+    public EntityCommandBuffer ECB;
     
     [BurstCompile]
-    private void Execute(Entity entity, in ProjectileTag ptag, LocalTransform transform)
+    private void Execute(Entity entity, EnabledRefRO<ProjectileTag> pTag, LocalTransform transform)
     {
         float2 topRight = CameraData.Position + (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
         float2 bottomLeft = CameraData.Position - (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
@@ -71,19 +72,26 @@ public partial struct ProjectileDestroyJob : IJobEntity
         
         if (pos.x < bottomLeft.x || pos.y < bottomLeft.y || pos.x > topRight.x || pos.y > topRight.y)
         {            
-            CommandBuffer.DestroyEntity(entity);            
+            ECB.SetComponentEnabled<ProjectileTag>(entity, false);            
         }
     }
 }
 
 [BurstCompile]
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct ProjectilesMoveJob : IJobEntity
 {
-    public float DeltaTime;        
+    public float DeltaTime; 
+    public CameraData CameraData;       
     
     [BurstCompile]
-    private void Execute(ref LocalTransform transform, in ProjectileTag pTag, MovementData movementData)
-    {                                
+    private void Execute(ref LocalTransform transform, EnabledRefRO<ProjectileTag> pTag, MovementData movementData)
+    {
+        if (pTag.ValueRO == false)
+        {            
+            transform.Position.xy = CameraData.Position + new float2(0, 10000);
+            return;
+        }      
         transform.Position.xy += movementData.Direction.xy * movementData.Speed * DeltaTime;
     }
 }

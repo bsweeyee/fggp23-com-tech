@@ -18,32 +18,37 @@ public partial struct EnemyMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        float deltaTime = SystemAPI.Time.DeltaTime;        
-        EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
+        float deltaTime = SystemAPI.Time.DeltaTime; 
+        CameraData cameraData = SystemAPI.GetSingleton<CameraData>();          
                 
-        foreach(var (pTag, pTransform, pAABB, pmd, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, MovementData>().WithEntityAccess())
+        foreach(var (pTag, pTransform) in SystemAPI.Query<PlayerTag, LocalToWorld>())
         {
             new EnemyMoveJob {
                 DeltaTime = deltaTime,
-                PlayerTransformData = pTransform,                
-            }.Schedule();                         
-        }
-
-        state.Dependency.Complete();        
-        ecb.Playback(state.EntityManager);            
-        ecb.Dispose();
+                PlayerTransformData = pTransform,
+                CameraData = cameraData,                
+            }.ScheduleParallel();                         
+        }       
     }
 }
 
 [BurstCompile]
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct EnemyMoveJob : IJobEntity
 {
     public float DeltaTime;    
-    public LocalToWorld PlayerTransformData;    
+    public LocalToWorld PlayerTransformData;
+    public CameraData CameraData;    
     
     [BurstCompile]
-    private void Execute(in EnemyTag ptag, ref LocalTransform transform, ref MovementData md)
+    private void Execute(EnabledRefRW<EnemyTag> eTag, ref LocalTransform transform, ref MovementData md)
     {
+        if (eTag.ValueRO == false)
+        {            
+            transform.Position.xy = CameraData.Position + new float2(0, 10000);
+            return;
+        }        
+
         var direction = PlayerTransformData.Position - transform.Position;
         direction = math.normalize(direction);
         

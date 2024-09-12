@@ -67,7 +67,13 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
         {
             // we deal damage to player
             PlayerVelocityRef.Value = md.Direction * 10;            
-            ECB.DestroyEntity(Enemy);
+            ECB.SetComponentEnabled<EnemyTag>(Enemy, false);
+            // ECB.SetComponent(Enemy, new LocalTransform
+            // {
+            //     Position = new float3(0, 0, -100),
+            //     Rotation = transform.Rotation,
+            //     Scale = transform.Scale,                    
+            // }); 
             // Debug.Log("collided with player: " + PlayerVelocityRef.Value);
         }                                       
     }

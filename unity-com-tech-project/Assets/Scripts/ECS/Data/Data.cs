@@ -79,9 +79,18 @@ public struct InputData : IComponentData
 
 #region Player Data
 
+public struct ToSpawnFlag : IComponentData, IEnableableComponent
+{ 
+}
+
 public struct ProjectileShooterData : IComponentData
 {    
     public double LastFireTime;
+}
+
+public struct ProjectileData : IComponentData
+{
+    public int EntitySpawnIndex;
 }
 
 public struct PlayerTag : IComponentData

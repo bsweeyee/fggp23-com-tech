@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Collections;
 using UnityEngine;
+using Unity.VisualScripting;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(TransformSystemGroup))]
@@ -15,95 +16,114 @@ public partial struct FireProjectileSystem : ISystem
         var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         var gameData = SystemAPI.GetSingleton<GameDataComponent>();
         var projectileTransform = SystemAPI.GetComponent<LocalTransform>(gameData.ProjectileEntity);
-
-        NativeArray<Entity> enititesToSpawn = new NativeArray<Entity>(gameData.PlayerNumberOfShots, Allocator.TempJob);
-                    
+        
         // retrieve EnemyTags that are disabled
-        int index = 0;
-        foreach(var (eTag, entity) in SystemAPI.Query<EnabledRefRW<EnemyTag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
-        {                                                
-            if ( eTag.ValueRO == false )
-            {
-                enititesToSpawn[index] = entity;
-                index++;                    
-            }                
-            if (index >= gameData.PlayerNumberOfShots)
-            {
-                break;
-            }
-        }
-
-        for(int i=0; i<index; i++)
+        
+        foreach(var (localToWorld, shooterData, inputData, movementData) in SystemAPI.Query<LocalToWorld, RefRW<ProjectileShooterData>, InputData, MovementData>())
         {
-            new FireProjectileJob
+            bool isShooting = inputData.InputState == 1 || inputData.InputState == 2;
+            bool isCooldownDone = (SystemAPI.Time.ElapsedTime - shooterData.ValueRO.LastFireTime) > gameData.ProjectileShootCooldown;
+            
+            if (isShooting && isCooldownDone)
             {
-                ElapsedTime = SystemAPI.Time.ElapsedTime,
-                GameData = gameData,
-                ECB = ecb,
-                PrefabProjectileTransform = projectileTransform,                
-                EntitiesToSpawn = enititesToSpawn,
-            }.Schedule();
-        }        
+                shooterData.ValueRW.LastFireTime = SystemAPI.Time.ElapsedTime;
+                float division = 1.0f/(float)gameData.PlayerNumberOfShots;                                   
+                
+                int index = 0;
+                foreach(var (pData, pTag, spawnFlag, entity) in SystemAPI.Query<RefRW<ProjectileData>, EnabledRefRW<ProjectileTag>, EnabledRefRW<ToSpawnFlag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                { 
+                    if ( pTag.ValueRO == false )
+                    {
+                        pData.ValueRW.EntitySpawnIndex = index;
+                        spawnFlag.ValueRW = true;
+                        index++;                    
+                    }                
+                    if (index >= gameData.PlayerNumberOfShots)
+                    {
+                        break;
+                    }
+                }
 
-        state.Dependency.Complete();
+                new FireProjectileJob
+                {                    
+                    GameData = gameData,
+                    // ECB = ecb,
+                    ECB = ecb.AsParallelWriter(),
+                    PrefabProjectileTransform = projectileTransform,                    
+                    Division = division,
+                    ShooterLocalToWorld = localToWorld,
+                    ShooterMovementData = movementData,
+                }.ScheduleParallel();
+                state.Dependency.Complete();                
+            }    
+        }                
+
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
-        enititesToSpawn.Dispose();        
     }
 }
 
 [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct FireProjectileJob : IJobEntity
-{
-    public double ElapsedTime;
-    public EntityCommandBuffer ECB;
+{    
+    // public EntityCommandBuffer ECB;
+    public EntityCommandBuffer.ParallelWriter ECB;
     public GameDataComponent GameData;
     public LocalTransform PrefabProjectileTransform;
+    public LocalToWorld ShooterLocalToWorld;
+    public MovementData ShooterMovementData;
+    public float Division;
 
-    public NativeArray<Entity> EntitiesToSpawn;
-
-    public void Execute(LocalToWorld ShooterLocalToWorld, RefRW<ProjectileShooterData> ShooterData, InputData InputData, MovementData ShooterMovementData)
+    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, ProjectileData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)
+    // public void Execute()
     {
-        bool isShooting = InputData.InputState == 1 || InputData.InputState == 2;
-        bool isCooldownDone = (ElapsedTime - ShooterData.ValueRO.LastFireTime) > GameData.ProjectileShootCooldown;
-        
-        if (isShooting && isCooldownDone)
+        // ECB.SetComponentEnabled<ProjectileTag>(EntityToSpawn, true);                
+        // ECB.SetComponent(EntityToSpawn, new LocalTransform{
+        //     Position = ShooterLocalToWorld.Position,
+        //     Rotation = PrefabProjectileTransform.Rotation,
+        //     Scale = PrefabProjectileTransform.Scale
+        // });
+
+        if (pTag.ValueRO == false && toSpawnFlag.ValueRO == true)
         {
-            ShooterData.ValueRW.LastFireTime = ElapsedTime;
-            float division = 1.0f / (float)EntitiesToSpawn.Length;
-            for(int i=0; i<EntitiesToSpawn.Length; i++)
+            ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, EntityToSpawn, true);                
+            ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, EntityToSpawn, false);
+            
+            ECB.SetComponent(chunkIndex, EntityToSpawn, new LocalTransform{
+                Position = ShooterLocalToWorld.Position,
+                Rotation = PrefabProjectileTransform.Rotation,
+                Scale = PrefabProjectileTransform.Scale
+            });
+
+            float3 direction = new float3(0, 0, 0);
+            if (GameData.PlayerNumberOfShots%2 == 0)
             {
-                ECB.SetComponentEnabled<ProjectileTag>(EntitiesToSpawn[i], true);                
-                ECB.SetComponent(EntitiesToSpawn[i], new LocalTransform{
-                    Position = ShooterLocalToWorld.Position,
-                    Rotation = PrefabProjectileTransform.Rotation,
-                    Scale = PrefabProjectileTransform.Scale
-                });
-                float3 direction = new float3(0, 0, 0);
-                if (GameData.PlayerNumberOfShots%2 == 0)
-                {
-                    float3 right = (i%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
-                    int d = (int) math.floor(i/2.0f);
-                    direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*division);
-                }
+                float3 right = (pData.EntitySpawnIndex%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
+                int d = (int) math.floor(pData.EntitySpawnIndex/2.0f);
+                direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
+            }
+            else
+            {
+                if (pData.EntitySpawnIndex == 0) { direction = ShooterLocalToWorld.Up; }
                 else
                 {
-                    if (i == 0) { direction = ShooterLocalToWorld.Up; }
-                    else
-                    {
-                        int index = i-1;
-                        float3 right = (index%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
-                        int d = (int) math.floor(index/2.0f);
-                        direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*division);
-                    }                        
-                }                    
-                
-                ECB.SetComponent(EntitiesToSpawn[i], new MovementData 
-                { 
-                    Direction = direction.xy, 
-                    Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
-                });
-            }
+                    int index = pData.EntitySpawnIndex-1;
+                    float3 right = (index%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
+                    int d = (int) math.floor(index/2.0f);
+                    direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
+                }                        
+            }                    
+            
+            // ECB.SetComponent(EntityToSpawn, new MovementData 
+            // { 
+            //     Direction = direction.xy, 
+            //     Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
+            // });             
+            ECB.SetComponent(chunkIndex, EntityToSpawn, new MovementData 
+            { 
+                Direction = direction.xy, 
+                Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
+            });             
         }
     }    
 }

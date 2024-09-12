@@ -29,18 +29,16 @@ public partial struct EnemySpawnSystem : ISystem
             float wt = (float)gameState.CurrentWaveCount / (float)gameData.TotalWaves;
             float nf = gameData.SpawnCount.x + gameData.SpawnCount.y * curveutility.evaluate(wt, diffcultyCurve);            
             int n = (int)math.floor(nf);
-            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)gameState.SystemTimeWhenGameStarted);            
+            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)(gameState.SystemTimeWhenGameStarted + SystemAPI.Time.ElapsedTime));            
             var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
-            
-            NativeArray<Entity> enititesToSpawn = new NativeArray<Entity>(n, Allocator.TempJob);
-            
+                        
             // retrieve EnemyTags that are disabled
             int index = 0;
-            foreach(var (eTag, entity) in SystemAPI.Query<EnabledRefRW<EnemyTag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+            foreach(var (eTag, spawnFlag, entity) in SystemAPI.Query<EnabledRefRW<EnemyTag>, EnabledRefRW<ToSpawnFlag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
             {                                                
                 if ( eTag.ValueRO == false )
                 {
-                    enititesToSpawn[index] = entity;
+                    spawnFlag.ValueRW = true;
                     index++;                    
                 }                
                 if (index >= n)
@@ -49,65 +47,64 @@ public partial struct EnemySpawnSystem : ISystem
                 }
             }
 
-            // send to job to spawn
-            for(int i=0; i<index; i++)
+             new SpawnEnemyJob
             {
-                new SpawnEnemyJob
-                {
-                    ECB = ecb,
-                    RandomNumberA = (random.NextFloat() * 2) - 1,
-                    RandomNumberB = (random.NextFloat() * 2) - 1,
-                    RandomNumberC = (random.NextFloat() * 2) - 1,
-                    EnemyEntityInitialLocalTransform = enemyInitialLocalTransform,                    
-                    EntityToSpawn = enititesToSpawn[i],
-                }.Schedule();
-            }
+                // ECB = ecb,
+                ECB = ecb.AsParallelWriter(),
+                random = random,
+                EnemyEntityInitialLocalTransform = enemyInitialLocalTransform,                    
+                gameData = gameData,
+                cameraData = cameraData
+            }.ScheduleParallel();
             state.Dependency.Complete();
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
-            enititesToSpawn.Dispose();
-            // Debug.Log($"{n}, {gameState.CurrentKills}, {gameState.CurrentWaveCount}");                            
-
+            // Debug.Log($"{n}, {gameState.CurrentKills}, {gameState.CurrentWaveCount}");
         }    
     }
 }
 
+[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct SpawnEnemyJob : IJobEntity
 {
-    public EntityCommandBuffer ECB;
-    public float RandomNumberA;
-    public float RandomNumberB;
-    public float RandomNumberC;
+    public EntityCommandBuffer.ParallelWriter ECB;
+    public Random random;
     public LocalTransform EnemyEntityInitialLocalTransform;
-    public Entity EntityToSpawn;            
+    public GameDataComponent gameData;
+    public CameraData cameraData;
 
-    public void Execute(in GameDataComponent gameData, in CameraData cameraData)
-    {                                      
-        // var ee = gameData.EnemyEntity;        
-        // var enemyEntity = ECB.Instantiate(ee);
-        ECB.SetComponentEnabled<EnemyTag>(EntityToSpawn, true);
-
-        int s1 = (int)math.sign(RandomNumberA); 
-        int s2 = (int)math.sign(RandomNumberB);                
-        float2 offset = new float2(0, 0);
-        
-        if (s2 > 0)
+    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity, EnabledRefRW<EnemyTag> eTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)
+    {
+        if (eTag.ValueRO == false && toSpawnFlag.ValueRO == true)
         {
-            offset = new float2(s1 * cameraData.Bounds.x/2 + RandomNumberA * cameraData.BoundsPadding.x, RandomNumberC * cameraData.Bounds.y/2);                    
+            ECB.SetComponentEnabled<EnemyTag>(chunkIndex, entity, true);
+            ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, entity, false);
+
+            float RandomNumberA = random.NextFloat() * 2 - 1;
+            float RandomNumberB = random.NextFloat() * 2 - 1;
+            float RandomNumberC = random.NextFloat() * 2 - 1;       
+
+            int s1 = (int)math.sign(RandomNumberA); 
+            int s2 = (int)math.sign(RandomNumberB);                
+            float2 offset = new float2(0, 0);
+            
+            if (s2 > 0)
+            {
+                offset = new float2(s1 * cameraData.Bounds.x/2 + RandomNumberA * cameraData.BoundsPadding.x, RandomNumberC * cameraData.Bounds.y/2);                    
+            }
+            else
+            {
+                offset = new float2(RandomNumberC * cameraData.Bounds.x/2, s1 * cameraData.Bounds.y/2 + RandomNumberA * cameraData.BoundsPadding.y);
+            }        
+                            
+            float2 randomPosition = cameraData.Position + offset; 
+                                                
+            ECB.SetComponent(chunkIndex, entity, new LocalTransform {
+                Position = new float3(randomPosition.xy, 0),
+                Rotation = EnemyEntityInitialLocalTransform.Rotation,
+                Scale = EnemyEntityInitialLocalTransform.Scale
+            });     
         }
-        else
-        {
-            offset = new float2(RandomNumberC * cameraData.Bounds.x/2, s1 * cameraData.Bounds.y/2 + RandomNumberA * cameraData.BoundsPadding.y);
-        }        
-                        
-        float2 randomPosition = cameraData.Position + offset; 
-                        
-        var lt = EnemyEntityInitialLocalTransform;                
-        ECB.SetComponent(EntityToSpawn, new LocalTransform {
-            Position = new float3(randomPosition.xy, 0),
-            Rotation = lt.Rotation,
-            Scale = lt.Scale
-        });                
     }
 }

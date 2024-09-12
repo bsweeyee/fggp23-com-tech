@@ -20,24 +20,25 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
 
         float t = math.clamp((float)gsc.CurrentWaveCount/(float)gdc.TotalWaves, 0, 1);
         float normalizedDifficultyValue = curveutility.evaluate(t, cbd);        
-               
-        foreach(var (projTag, projTransform, projAABB, entity) in SystemAPI.Query<ProjectileTag, LocalToWorld, AABBData>().WithEntityAccess())
+                       
+        foreach(var (projTag, projTransform, projAABB, entity) in SystemAPI.Query<ProjectileTag, LocalTransform, AABBData>().WithEntityAccess())
         {            
             new EnemyProjectileCollisionJob
             {
                 ProjectileTransform = projTransform,
                 ProjectileBounds = projAABB,
                 ProjectileEntity = entity,
-                ECB = ecb,
+                ECB = ecb.AsParallelWriter(),
+                // ECB = ecb,
                 NormalizedDifficultyValue = normalizedDifficultyValue,
                 
                 GameEntity = gameEntity,
                 GSC = gsc,
                 GDC = gdc,
-            }.Schedule();
+            }.ScheduleParallel();
+            state.Dependency.Complete();
         }
         
-        state.Dependency.Complete();
         ecb.Playback(state.EntityManager);            
         ecb.Dispose();          
     }
@@ -47,10 +48,11 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
 [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct EnemyProjectileCollisionJob : IJobEntity
 {
-    public LocalToWorld ProjectileTransform;
+    public LocalTransform ProjectileTransform;
     public AABBData ProjectileBounds;
     public Entity ProjectileEntity;
-    public EntityCommandBuffer ECB;
+    // public EntityCommandBuffer ECB;
+    public EntityCommandBuffer.ParallelWriter ECB;
     public float NormalizedDifficultyValue;
     
     public Entity GameEntity;
@@ -58,7 +60,7 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
     public GameDataComponent GDC; 
     
     [BurstCompile]
-    private void Execute(Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
+    private void Execute([ChunkIndexInQuery] int chunkIndex, Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
         if (eTag.ValueRO == false) return;
         
@@ -75,11 +77,10 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
                             pmax.y >= tmin.y;
         
         if (collisionX && collisionY)
-        {
-            // we deal damage to player
-            ECB.SetComponentEnabled<EnemyTag>(Enemy, false);
-            ECB.SetComponentEnabled<ProjectileTag>(ProjectileEntity, false);
-
+        {                        
+            ECB.SetComponentEnabled<EnemyTag>(chunkIndex, Enemy, false);
+            ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, ProjectileEntity, false);
+           
             GSC.CurrentKills += 1;
             
             if (GSC.CurrentKills >= NormalizedDifficultyValue * GDC.KillsOnFinalWave)
@@ -87,7 +88,8 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
                 // increase wave count
                 GSC.CurrentWaveCount += 1;                
             }        
-            ECB.SetComponent(GameEntity, GSC);
+            ECB.SetComponent(0, GameEntity, GSC);
+            // ECB.SetComponent(GameEntity, GSC);
         }                               
     }
 }

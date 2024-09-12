@@ -19,16 +19,22 @@ public partial struct EnemyMoveSystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = SystemAPI.Time.DeltaTime; 
-        CameraData cameraData = SystemAPI.GetSingleton<CameraData>();          
+        CameraData cameraData = SystemAPI.GetSingleton<CameraData>();
+        EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.TempJob);          
                 
         foreach(var (pTag, pTransform) in SystemAPI.Query<PlayerTag, LocalToWorld>())
         {
             new EnemyMoveJob {
                 DeltaTime = deltaTime,
                 PlayerTransformData = pTransform,
-                CameraData = cameraData,                
-            }.ScheduleParallel();                         
-        }       
+                CameraData = cameraData,
+                ECB = ecb.AsParallelWriter()                
+            }.ScheduleParallel();
+            state.Dependency.Complete();                         
+        }
+
+        ecb.Playback(state.EntityManager);
+        ecb.Dispose();       
     }
 }
 
@@ -38,22 +44,33 @@ public partial struct EnemyMoveJob : IJobEntity
 {
     public float DeltaTime;    
     public LocalToWorld PlayerTransformData;
-    public CameraData CameraData;    
+    public CameraData CameraData;
+    public EntityCommandBuffer.ParallelWriter ECB;    
     
     [BurstCompile]
-    private void Execute(EnabledRefRW<EnemyTag> eTag, ref LocalTransform transform, ref MovementData md)
+    private void Execute([ChunkIndexInQuery] int chunkIndex, EnabledRefRW<EnemyTag> eTag, Entity Enemy, LocalTransform transform, ref MovementData md)
     {
         if (eTag.ValueRO == false)
-        {            
-            transform.Position.xy = CameraData.Position + new float2(0, 10000);
+        {
+            ECB.SetComponent(chunkIndex, Enemy, new LocalTransform
+            {
+                Position = new float3(0, 0, -100),
+                Rotation = transform.Rotation,
+                Scale = transform.Scale,                    
+            });
             return;
-        }        
+        }
 
         var direction = PlayerTransformData.Position - transform.Position;
-        direction = math.normalize(direction);
-        
-        md.Direction = new float2(direction.xy);        
+        direction = math.normalize(direction);        
+        md.Direction = new float2(direction.xy);   
+        var newPos = transform.Position + direction * DeltaTime * md.Speed;
 
-        transform.Position += direction * DeltaTime * md.Speed;
+        ECB.SetComponent(chunkIndex, Enemy, new LocalTransform
+        {
+            Position = newPos,
+            Rotation = transform.Rotation,
+            Scale = transform.Scale,                    
+        });   
     }
 }

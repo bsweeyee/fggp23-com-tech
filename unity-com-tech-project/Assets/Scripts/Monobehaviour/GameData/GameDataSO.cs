@@ -29,7 +29,6 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private double projectileShootCooldown = 1;
 
     [Header("Camera settings")]
-    [SerializeField] private GameObject cameraPrefab;
     [SerializeField] private float cameraSpeed = 10.0f;
     [SerializeField] private Vector2 cameraBoundsPadding = new Vector2(50, 50);
 
@@ -52,7 +51,6 @@ public class GameDataSO : ScriptableObject
     public float ProjectileSpeed { get { return projectileSpeed; }} 
     public double ProjectileShootCooldown { get { return projectileShootCooldown; }} 
 
-    public GameObject CameraPrefab { get { return cameraPrefab; }} 
     public float CameraSpeed { get { return cameraSpeed; } }
     public Vector2 CameraBoundsPadding { get { return cameraBoundsPadding; } }
 }

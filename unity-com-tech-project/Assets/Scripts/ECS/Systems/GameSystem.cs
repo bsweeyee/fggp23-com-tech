@@ -46,19 +46,39 @@ public partial class GameSystem : SystemBase
         
         // pre-instantiate enemy entities and set enabled component to false
         EntityManager.SetComponentEnabled<EnemyTag>(GameDataComponent.EnemyEntity, false);        
+        EntityManager.SetComponentEnabled<ToSpawnFlag>(GameDataComponent.EnemyEntity, false);
+        
+        var lte = EntityManager.GetComponentData<LocalTransform>(GameDataComponent.EnemyEntity);
+        EntityManager.SetComponentData<LocalTransform>(GameDataComponent.EnemyEntity, new LocalTransform
+        {
+            Position = new float3(0, 0, -100),
+            Rotation = lte.Rotation,
+            Scale = lte.Scale
+        });
         for(int i=0; i< GameDataComponent.SpawnCount.y * 10; i++)
         {
             EntityManager.Instantiate(GameDataComponent.EnemyEntity);
         }
-        
+
+        // pre-instantiate all projectile entities and set to false 
         EntityManager.SetComponentEnabled<ProjectileTag>(GameDataComponent.ProjectileEntity, false);
+        EntityManager.SetComponentEnabled<ToSpawnFlag>(GameDataComponent.ProjectileEntity, false);
+        
+        var lt = EntityManager.GetComponentData<LocalTransform>(GameDataComponent.ProjectileEntity);
+        EntityManager.SetComponentData<LocalTransform>(GameDataComponent.ProjectileEntity, new LocalTransform
+        {
+            Position = new float3(0, 0, -100),
+            Rotation = lt.Rotation,
+            Scale = lt.Scale
+        });
+
         var dist = math.length(ce.Bounds) + math.length(ce.BoundsPadding); 
         var timeToDestruction = dist / GameDataComponent.ProjectileSpeed;
         var maxProjectileWave = timeToDestruction / GameDataComponent.ProjectileShootCooldown; 
         for (int i=0; i<GameDataComponent.PlayerNumberOfShots * maxProjectileWave * 2; i++)
         {
             EntityManager.Instantiate(GameDataComponent.ProjectileEntity);
-        }
+        }        
         
         Debug.Log("start running");                
     }
@@ -76,7 +96,7 @@ public partial class GameSystem : SystemBase
             if (s == 3) s = 0;            
             if (s == 1) s = 2;            
             pmi.ValueRW.InputState = s;
-        }        
+        }                         
     }
 
     protected override void OnStopRunning()

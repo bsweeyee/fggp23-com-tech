@@ -18,8 +18,8 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
         GameDataComponent gdc = SystemAPI.GetComponent<GameDataComponent>(gameEntity);
         DynamicBuffer<CurveBufferData> cbd = SystemAPI.GetBuffer<CurveBufferData>(gameEntity);
 
-        float t = math.clamp((float)gsc.CurrentWaveCount/(float)gdc.TotalWaves, 0, 1);
-        float normalizedDifficultyValue = curveutility.evaluate(t, cbd);        
+        float t = math.clamp((float)(gsc.CurrentWaveCount + 1)/(float)gdc.TotalWaves, 0, 1);
+        float nextNormalizedDifficultyValue = curveutility.evaluate(t, cbd);        
                        
         foreach(var (projTag, projTransform, projAABB, entity) in SystemAPI.Query<ProjectileTag, LocalTransform, AABBData>().WithEntityAccess())
         {            
@@ -30,7 +30,7 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
                 ProjectileEntity = entity,
                 ECB = ecb.AsParallelWriter(),
                 // ECB = ecb,
-                NormalizedDifficultyValue = normalizedDifficultyValue,
+                NextNormalizedDifficultyValue = nextNormalizedDifficultyValue,
                 
                 GameEntity = gameEntity,
                 GSC = gsc,
@@ -53,7 +53,7 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
     public Entity ProjectileEntity;
     // public EntityCommandBuffer ECB;
     public EntityCommandBuffer.ParallelWriter ECB;
-    public float NormalizedDifficultyValue;
+    public float NextNormalizedDifficultyValue;
     
     public Entity GameEntity;
     public GameStateComponent GSC;
@@ -83,10 +83,11 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
            
             GSC.CurrentKills += 1;
             
-            if (GSC.CurrentKills >= NormalizedDifficultyValue * GDC.KillsOnFinalWave)
+            if (GSC.CurrentKills >= GSC.TargetKillCount)
             {
                 // increase wave count
-                GSC.CurrentWaveCount += 1;                
+                GSC.CurrentWaveCount += 1; 
+                GSC.TargetKillCount += (int)(NextNormalizedDifficultyValue * GDC.KillsOnFinalWave);                
             }        
             ECB.SetComponent(0, GameEntity, GSC);
             // ECB.SetComponent(GameEntity, GSC);

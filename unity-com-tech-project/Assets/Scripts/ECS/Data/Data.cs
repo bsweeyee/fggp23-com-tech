@@ -50,6 +50,7 @@ public struct GameStateComponent : IComponentData
     public int CurrentState; // 0: start, 1: play
     public int CurrentWaveCount;
     public int CurrentKills;
+    public int TargetKillCount;
     public long SystemTimeWhenGameStarted;
 }
 
@@ -88,9 +89,9 @@ public struct ProjectileShooterData : IComponentData
     public double LastFireTime;
 }
 
-public struct ProjectileData : IComponentData
+public struct SpawnData : IComponentData
 {
-    public int EntitySpawnIndex;
+    public int SpawnIndex;
 }
 
 public struct PlayerTag : IComponentData

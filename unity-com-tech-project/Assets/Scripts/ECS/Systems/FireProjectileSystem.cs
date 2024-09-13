@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using Unity.Collections;
-using UnityEngine;
-using Unity.VisualScripting;
+using System;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(TransformSystemGroup))]
@@ -27,14 +25,15 @@ public partial struct FireProjectileSystem : ISystem
             if (isShooting && isCooldownDone)
             {
                 shooterData.ValueRW.LastFireTime = SystemAPI.Time.ElapsedTime;
-                float division = 1.0f/(float)gameData.PlayerNumberOfShots;                                   
+                float division = 1.0f/(float)gameData.PlayerNumberOfShots;
                 
                 int index = 0;
-                foreach(var (pData, pTag, spawnFlag, entity) in SystemAPI.Query<RefRW<ProjectileData>, EnabledRefRW<ProjectileTag>, EnabledRefRW<ToSpawnFlag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
+                foreach(var (pData, pTag, spawnFlag, entity) in SystemAPI.Query<RefRW<SpawnData>, EnabledRefRW<ProjectileTag>, EnabledRefRW<ToSpawnFlag>>().WithEntityAccess().WithOptions(EntityQueryOptions.IgnoreComponentEnabledState))
                 { 
                     if ( pTag.ValueRO == false )
                     {
-                        pData.ValueRW.EntitySpawnIndex = index;
+                        pData.ValueRW.SpawnIndex = index;
+                        pTag.ValueRW = true;
                         spawnFlag.ValueRW = true;
                         index++;                    
                     }                
@@ -63,7 +62,6 @@ public partial struct FireProjectileSystem : ISystem
     }
 }
 
-[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
 public partial struct FireProjectileJob : IJobEntity
 {    
     // public EntityCommandBuffer ECB;
@@ -74,7 +72,7 @@ public partial struct FireProjectileJob : IJobEntity
     public MovementData ShooterMovementData;
     public float Division;
 
-    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, ProjectileData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)
+    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, SpawnData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)
     // public void Execute()
     {
         // ECB.SetComponentEnabled<ProjectileTag>(EntityToSpawn, true);                
@@ -84,9 +82,9 @@ public partial struct FireProjectileJob : IJobEntity
         //     Scale = PrefabProjectileTransform.Scale
         // });
 
-        if (pTag.ValueRO == false && toSpawnFlag.ValueRO == true)
+        if (toSpawnFlag.ValueRO == true)
         {
-            ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, EntityToSpawn, true);                
+            // ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, EntityToSpawn, true);                
             ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, EntityToSpawn, false);
             
             ECB.SetComponent(chunkIndex, EntityToSpawn, new LocalTransform{
@@ -98,16 +96,16 @@ public partial struct FireProjectileJob : IJobEntity
             float3 direction = new float3(0, 0, 0);
             if (GameData.PlayerNumberOfShots%2 == 0)
             {
-                float3 right = (pData.EntitySpawnIndex%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
-                int d = (int) math.floor(pData.EntitySpawnIndex/2.0f);
+                float3 right = (pData.SpawnIndex%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
+                int d = (int) math.floor(pData.SpawnIndex/2.0f);
                 direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
             }
             else
             {
-                if (pData.EntitySpawnIndex == 0) { direction = ShooterLocalToWorld.Up; }
+                if (pData.SpawnIndex == 0) { direction = ShooterLocalToWorld.Up; }
                 else
                 {
-                    int index = pData.EntitySpawnIndex-1;
+                    int index = pData.SpawnIndex-1;
                     float3 right = (index%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
                     int d = (int) math.floor(index/2.0f);
                     direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);

@@ -24,7 +24,7 @@ public class ProjectileAuthoring : MonoBehaviour
 
             AddComponent<ProjectileTag>(entity);
             AddComponent<ToSpawnFlag>(entity);            
-            AddComponent<ProjectileData>(entity);            
+            AddComponent<SpawnData>(entity);            
             AddComponent<MovementData>(entity);
             AddComponent(entity, new AABBData {
                 Min = new float2(-size.x/2 * srScale.x/2, -size.y/2 * srScale.y/2),

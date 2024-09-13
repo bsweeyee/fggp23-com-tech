@@ -18,6 +18,7 @@ public class EnemyAuthoring : MonoBehaviour
             Entity e = GetEntity(TransformUsageFlags.Dynamic);
             AddComponent<EnemyTag>(e);
             AddComponent<ToSpawnFlag>(e);
+            AddComponent<SpawnData>(e);
             AddComponent(e, new MovementData
             {
                 Speed = authoring.GameData.EnemyMoveSpeed,

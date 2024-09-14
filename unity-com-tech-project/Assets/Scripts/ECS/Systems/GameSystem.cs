@@ -1,11 +1,8 @@
-using System.Drawing;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Windows.WebCam;
 
 [UpdateInGroup(typeof(InitializationSystemGroup),OrderLast = true)]
 public partial class GameSystem : SystemBase
@@ -22,7 +19,7 @@ public partial class GameSystem : SystemBase
         base.OnCreate();        
         
         InputActions = new GameInput();
-    }
+    }    
 
     protected override void OnStartRunning()
     {
@@ -34,35 +31,35 @@ public partial class GameSystem : SystemBase
         GameDataComponent gameDataComponent = new GameDataComponent();
         CameraData cameraData = new CameraData();
         GameStateComponent gameStateComponent = new GameStateComponent();                
-        
+
         foreach (var (gd, entity) in SystemAPI.Query<GameDataComponent>().WithEntityAccess())
         {
             GameDataEntity = entity;
             gameDataComponent = gd;
         }
-        
+
         DynamicBuffer<CurveBufferData> cbd = SystemAPI.GetBuffer<CurveBufferData>(GameDataEntity);
         gameStateComponent = SystemAPI.GetComponent<GameStateComponent>(GameDataEntity);
         gameStateComponent.TargetKillCount = (int)(curveutility.evaluate((float)gameStateComponent.CurrentWaveCount/(float)gameDataComponent.TotalWaves, cbd) * gameDataComponent.KillsOnFinalWave);
         EntityManager.SetComponentData(GameDataEntity, gameStateComponent);
-        
+
         var playerEntity = EntityManager.Instantiate(gameDataComponent.PlayerEntity);
         var playerHealth = SystemAPI.GetComponent<PlayerHealthData>(playerEntity);            
         var playerTransform = SystemAPI.GetComponentRW<LocalTransform>(playerEntity);
         playerTransform.ValueRW.Position.xy = gameDataComponent.PlayerStartPosition;
         PlayerEntity = playerEntity;            
-                    
+
         cameraData = SystemAPI.GetComponent<CameraData>(GameDataEntity);                               
-        
+
         SystemAPI.SetSingleton(gameDataComponent);
         SystemAPI.SetSingleton(cameraData);
         SystemAPI.SetSingleton(gameStateComponent);
         SystemAPI.SetSingleton(playerHealth);
-        
+
         // pre-instantiate enemy entities and set enabled component to false
         EntityManager.SetComponentEnabled<EnemyTag>(gameDataComponent.EnemyEntity, false);        
         EntityManager.SetComponentEnabled<ToSpawnFlag>(gameDataComponent.EnemyEntity, false);
-        
+
         var lte = EntityManager.GetComponentData<LocalTransform>(gameDataComponent.EnemyEntity);
         EntityManager.SetComponentData<LocalTransform>(gameDataComponent.EnemyEntity, new LocalTransform
         {
@@ -70,7 +67,7 @@ public partial class GameSystem : SystemBase
             Rotation = lte.Rotation,
             Scale = lte.Scale
         });
-        
+
         currentEnemyEntityCount = (int)gameDataComponent.SpawnCount.y * 10;
         for(int i=0; i< currentEnemyEntityCount; i++)
         {
@@ -80,7 +77,7 @@ public partial class GameSystem : SystemBase
         // pre-instantiate all projectile entities and set to false 
         EntityManager.SetComponentEnabled<ProjectileTag>(gameDataComponent.ProjectileEntity, false);
         EntityManager.SetComponentEnabled<ToSpawnFlag>(gameDataComponent.ProjectileEntity, false);
-        
+
         var lt = EntityManager.GetComponentData<LocalTransform>(gameDataComponent.ProjectileEntity);
         EntityManager.SetComponentData(gameDataComponent.ProjectileEntity, new LocalTransform
         {
@@ -92,13 +89,13 @@ public partial class GameSystem : SystemBase
         var dist = math.length(cameraData.Bounds) + math.length(cameraData.BoundsPadding); 
         var timeToDestruction = dist / gameDataComponent.ProjectileSpeed;
         var maxProjectileWave = timeToDestruction / gameDataComponent.ProjectileShootCooldown; 
-        
+
         currentProjectileEntityCount = (int)(gameDataComponent.PlayerNumberOfShots * maxProjectileWave * 2); 
         for (int i=0; i<currentProjectileEntityCount; i++)
         {
             EntityManager.Instantiate(gameDataComponent.ProjectileEntity);
         }        
-        
+
         Debug.Log("start running");                
     }
 
@@ -118,11 +115,11 @@ public partial class GameSystem : SystemBase
             gameStateComponent.CurrentState = 0;
             gameStateComponent.CurrentWaveCount = 1;
             gameStateComponent.CurrentKills = 0;
-            
+
             DynamicBuffer<CurveBufferData> cbd = SystemAPI.GetBuffer<CurveBufferData>(GameDataEntity);
             gameStateComponent.TargetKillCount = (int)(curveutility.evaluate((float)gameStateComponent.CurrentWaveCount/(float)gameDataComponent.TotalWaves, cbd) * gameDataComponent.KillsOnFinalWave);            
             gameStateComponent.LastWaveTimeEnded = SystemAPI.Time.ElapsedTime;
-            
+
             phd.Value = gameDataComponent.PlayerStartHealth;            
             pmd1.AngularSpeed = 0;
 
@@ -137,9 +134,9 @@ public partial class GameSystem : SystemBase
             var pmd2 = SystemAPI.GetComponent<MovementData>(PlayerEntity);            
             pmd2.AngularSpeed = 0;
             SystemAPI.SetComponent(PlayerEntity, pmd2); 
-            
+
             var dt = SystemAPI.Time.ElapsedTime - gameStateComponent.LastWaveTimeEnded;
-            
+
             if (dt > gameDataComponent.WaitTimeBetweenWaves)
             {
                 gameStateComponent.CurrentState = 1;
@@ -155,7 +152,7 @@ public partial class GameSystem : SystemBase
                 RefRW<InputData> pmi = SystemAPI.GetComponentRW<InputData>(PlayerEntity);            
                 pmi.ValueRW.PreviousDirection = pmi.ValueRW.Direction;
                 pmi.ValueRW.Direction = moveInput;
-                
+
                 var s = pmi.ValueRO.InputState;
                 if (s == 3) s = 0;            
                 if (s == 1) s = 2;            
@@ -169,7 +166,7 @@ public partial class GameSystem : SystemBase
 
             int newCount = (int)(gameDataComponent.PlayerNumberOfShots * maxProjectileWave * 2); 
             int diff = newCount - currentProjectileEntityCount;
-            
+
             if (diff < 0)
             {
                 int toDestroy = math.abs(diff);

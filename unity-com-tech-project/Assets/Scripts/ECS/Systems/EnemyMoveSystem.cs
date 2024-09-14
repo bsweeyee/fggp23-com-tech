@@ -1,15 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using Unity.Rendering;
-using System.Threading;
 using Unity.Collections;
-using UnityEditor;
 using Unity.Burst;
-using Unity.Entities.UniversalDelegates;
 
 [UpdateAfter(typeof(PlayerMoveSystem))]
 [UpdateBefore(typeof(TransformSystemGroup))]

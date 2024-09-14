@@ -1,15 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
-using UnityEditor.Rendering;
 using Unity.Burst;
 using Unity.Mathematics;
-using NUnit.Framework.Constraints;
-using Unity.Entities.UniversalDelegates;
-using UnityEditor.MPE;
-using UnityEngine.EventSystems;
 
 [UpdateBefore(typeof(TransformSystemGroup))]
 public partial struct PlayerMoveSystem : ISystem

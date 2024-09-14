@@ -1,11 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Entities.Serialization;
-using Unity.Collections;
 
 public class GameAuthoring : MonoBehaviour
 {

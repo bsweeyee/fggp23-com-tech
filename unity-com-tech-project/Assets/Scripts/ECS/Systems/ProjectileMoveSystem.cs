@@ -1,15 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.Burst;
-using UnityEngine;
-using System.Runtime.CompilerServices;
-using Unity.Collections;
-using NUnit.Framework.Constraints;
-using Unity.Jobs;
 
 [UpdateBefore(typeof(TransformSystemGroup))]
 [UpdateAfter(typeof(FireProjectileSystem))]

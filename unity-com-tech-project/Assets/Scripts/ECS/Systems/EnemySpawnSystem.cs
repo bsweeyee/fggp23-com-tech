@@ -1,8 +1,6 @@
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using System;
-using System.Diagnostics;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 public partial struct EnemySpawnSystem : ISystem

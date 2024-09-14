@@ -11,8 +11,11 @@ public partial struct FireProjectileSystem : ISystem
 {    
     public void OnUpdate(ref SystemState state)
     {
-        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         var gameData = SystemAPI.GetSingleton<GameDataComponent>();
+        var gs = SystemAPI.GetSingleton<GameStateComponent>();
+        if (gs.CurrentState != 1) return;
+        
+        var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         var projectileTransform = SystemAPI.GetComponent<LocalTransform>(gameData.ProjectileEntity);
         
         // retrieve EnemyTags that are disabled
@@ -72,16 +75,8 @@ public partial struct FireProjectileJob : IJobEntity
     public MovementData ShooterMovementData;
     public float Division;
 
-    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, SpawnData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)
-    // public void Execute()
+    public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, SpawnData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)    
     {
-        // ECB.SetComponentEnabled<ProjectileTag>(EntityToSpawn, true);                
-        // ECB.SetComponent(EntityToSpawn, new LocalTransform{
-        //     Position = ShooterLocalToWorld.Position,
-        //     Rotation = PrefabProjectileTransform.Rotation,
-        //     Scale = PrefabProjectileTransform.Scale
-        // });
-
         if (toSpawnFlag.ValueRO == true)
         {
             // ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, EntityToSpawn, true);                
@@ -111,12 +106,7 @@ public partial struct FireProjectileJob : IJobEntity
                     direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
                 }                        
             }                    
-            
-            // ECB.SetComponent(EntityToSpawn, new MovementData 
-            // { 
-            //     Direction = direction.xy, 
-            //     Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
-            // });             
+                                
             ECB.SetComponent(chunkIndex, EntityToSpawn, new MovementData 
             { 
                 Direction = direction.xy, 

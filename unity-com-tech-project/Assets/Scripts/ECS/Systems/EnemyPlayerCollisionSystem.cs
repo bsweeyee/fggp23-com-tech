@@ -13,13 +13,20 @@ public partial struct EnemyPlayerCollisionSystem : ISystem
     {
         NativeReference<float2> playerVelocityRef = new NativeReference<float2>(Allocator.TempJob);
         EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
+        
+        var gse = SystemAPI.GetSingletonEntity<GameStateComponent>();
+        var gameStateComponent = SystemAPI.GetComponent<GameStateComponent>(gse);
 
-        foreach(var (pTag, pTransform, pAABB, pmd, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, MovementData>().WithEntityAccess())
+        foreach(var (pTag, pTransform, pAABB, pHealthData, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, PlayerHealthData>().WithEntityAccess())
         {
-            new EnemyPlayerCollisionJob {
+            new EnemyPlayerCollisionJob {                
+                PlayerEntity = entity,
+                PlayerHealthData = pHealthData,
                 PlayerTransform = pTransform,
                 PlayerBounds = pAABB,
                 PlayerVelocityRef = playerVelocityRef,
+                GameStateComponent = gameStateComponent,
+                GameEntity = gse,
                 ECB = ecb,
             }.Schedule();   
         }
@@ -42,9 +49,14 @@ public partial struct EnemyPlayerCollisionSystem : ISystem
 [BurstCompile]
 public partial struct EnemyPlayerCollisionJob : IJobEntity
 {
+    public Entity PlayerEntity;
+    public PlayerHealthData PlayerHealthData;
     public LocalToWorld PlayerTransform;
     public AABBData PlayerBounds;
     public NativeReference<float2> PlayerVelocityRef;
+    
+    public Entity GameEntity;
+    public GameStateComponent GameStateComponent;
     public EntityCommandBuffer ECB;
     
     [BurstCompile]
@@ -68,6 +80,15 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
             // we deal damage to player
             PlayerVelocityRef.Value = md.Direction * 10;            
             ECB.SetComponentEnabled<EnemyTag>(Enemy, false);
+            
+            PlayerHealthData.Value -= 1;
+            ECB.SetComponent(PlayerEntity, PlayerHealthData);
+            
+            if (PlayerHealthData.Value <= 0)
+            {
+                GameStateComponent.CurrentState = 2; // go to game over state
+                ECB.SetComponent(GameEntity, GameStateComponent);
+            }
             // ECB.SetComponent(Enemy, new LocalTransform
             // {
             //     Position = new float3(0, 0, -100),

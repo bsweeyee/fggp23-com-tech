@@ -39,15 +39,17 @@ MonoBehaviour:
   spawnCount: {x: 1, y: 500}
   killsOnFinalWave: 500
   totalWaves: 5
+  waitTimeBetweenWaves: 6
   playerPrefab: {fileID: 6497169173688884423, guid: d2d582b32c46cdc4d9aded09660f96c6,
     type: 3}
   playerStartPosition: {x: 0, y: 0}
   playerMoveSpeed: 10
   playerAngularSpeed: 7
-  initialNumOfShots: 3
+  initialNumOfShots: 6
+  playerHP: 20
   enemyPrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,
     type: 3}
-  enemySpawnRate: 5
+  enemySpawnRate: 2
   enemySpeed: 5
   projectilePrefab: {fileID: 2236951593923482947, guid: 49c1f317a6a325b418ba212af9223f01,
     type: 3}

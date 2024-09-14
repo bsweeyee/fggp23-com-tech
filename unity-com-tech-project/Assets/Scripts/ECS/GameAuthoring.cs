@@ -37,6 +37,7 @@ public class GameAuthoring : MonoBehaviour
                 PlayerMoveSpeed = authoring.GameData.PlayerMoveSpeed,
                 PlayerAngularSpeed = authoring.GameData.PlayerAngularSpeed,
                 PlayerNumberOfShots = authoring.GameData.InitialNumberOfShots,
+                PlayerStartHealth = authoring.GameData.PlayerHP,
 
                 // Projectile
                 ProjectileEntity = projectileEntity,
@@ -55,10 +56,11 @@ public class GameAuthoring : MonoBehaviour
                 SpawnCount = authoring.GameData.SpawnCount,
                 KillsOnFinalWave = authoring.GameData.KillsOnFinalWave,
                 TotalWaves = authoring.GameData.TotalWaves,
+                WaitTimeBetweenWaves = authoring.GameData.WaitTimeBetweenWaves
             });
             AddComponent(gameEntity, new GameStateComponent 
             {
-                CurrentState = 1,
+                CurrentState = 0,
                 CurrentWaveCount = 1,
                 CurrentKills = 0
             });

@@ -20,7 +20,8 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
 
         float t = math.clamp((float)(gsc.CurrentWaveCount + 1)/(float)gdc.TotalWaves, 0, 1);
         float nextNormalizedDifficultyValue = curveutility.evaluate(t, cbd);        
-                       
+
+        double elapsedTime = SystemAPI.Time.ElapsedTime;         
         foreach(var (projTag, projTransform, projAABB, entity) in SystemAPI.Query<ProjectileTag, LocalTransform, AABBData>().WithEntityAccess())
         {            
             new EnemyProjectileCollisionJob
@@ -35,6 +36,7 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
                 GameEntity = gameEntity,
                 GSC = gsc,
                 GDC = gdc,
+                ElapsedTime = elapsedTime,
             }.ScheduleParallel();
             state.Dependency.Complete();
         }
@@ -58,7 +60,8 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
     public Entity GameEntity;
     public GameStateComponent GSC;
     public GameDataComponent GDC; 
-    
+
+    public double ElapsedTime;
     [BurstCompile]
     private void Execute([ChunkIndexInQuery] int chunkIndex, Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
@@ -87,10 +90,20 @@ public partial struct EnemyProjectileCollisionJob : IJobEntity
             {
                 // increase wave count
                 GSC.CurrentWaveCount += 1; 
-                GSC.TargetKillCount += (int)(NextNormalizedDifficultyValue * GDC.KillsOnFinalWave);                
+                if (GSC.CurrentWaveCount > GDC.TotalWaves)
+                {
+                    GSC.CurrentState = 4; // go to win state
+                }
+                else
+                {
+                    GSC.CurrentState = 3; // go to next wave state
+                    GSC.LastWaveTimeEnded = ElapsedTime; 
+                    GSC.TargetKillCount += (int)(NextNormalizedDifficultyValue * GDC.KillsOnFinalWave);                
+                }
             }        
-            ECB.SetComponent(0, GameEntity, GSC);
+            ECB.SetComponent(chunkIndex, GameEntity, GSC);
             // ECB.SetComponent(GameEntity, GSC);
+
         }                               
     }
 }

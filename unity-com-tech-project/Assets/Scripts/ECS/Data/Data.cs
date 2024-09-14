@@ -18,6 +18,7 @@ public struct GameDataComponent : IComponentData
     public float2 SpawnCount; // x == min, y == max
     public int KillsOnFinalWave;
     public int TotalWaves;
+    public float WaitTimeBetweenWaves;
 
     // Player
     public Entity PlayerEntity;
@@ -25,6 +26,7 @@ public struct GameDataComponent : IComponentData
     public float PlayerMoveSpeed;
     public float PlayerAngularSpeed;
     public int PlayerNumberOfShots;
+    public float PlayerStartHealth;
 
     // Projectile
     public Entity ProjectileEntity;
@@ -47,11 +49,12 @@ public struct GameDataComponent : IComponentData
 
 public struct GameStateComponent : IComponentData
 {
-    public int CurrentState; // 0: start, 1: play
+    public int CurrentState; // 0: start, 1: play, 2: game over, 3: next wave, 4: win
     public int CurrentWaveCount;
     public int CurrentKills;
     public int TargetKillCount;
     public long SystemTimeWhenGameStarted;
+    public double LastWaveTimeEnded;
 }
 
 [InternalBufferCapacity(256)]
@@ -79,6 +82,10 @@ public struct InputData : IComponentData
 }
 
 #region Player Data
+public struct PlayerHealthData : IComponentData
+{
+    public float Value;
+}
 
 public struct ToSpawnFlag : IComponentData, IEnableableComponent
 { 

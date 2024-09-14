@@ -10,6 +10,7 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private Vector2 spawnCount = new Vector2(100, 1000); // x == min, y == max
     [SerializeField] private int killsOnFinalWave = 2000;
     [SerializeField] private int totalWaves = 5;
+    [SerializeField] private float waitTimeBetweenWaves = 3;
 
     [Header("Player settings")]
     [SerializeField] private GameObject playerPrefab;
@@ -17,7 +18,8 @@ public class GameDataSO : ScriptableObject
     [SerializeField] private float playerMoveSpeed;
     [SerializeField] private float playerAngularSpeed = 10.0f;    
     [Range(1, 1000)][SerializeField] private int initialNumOfShots = 3;    
-
+    [SerializeField] private float playerHP = 5;
+    
     [Header("Enemy settings")]
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private float enemySpawnRate;    
@@ -36,11 +38,13 @@ public class GameDataSO : ScriptableObject
     public Vector2 SpawnCount { get { return spawnCount; } } // x == min, y == max
     public int KillsOnFinalWave { get { return killsOnFinalWave; } }
     public int TotalWaves { get { return totalWaves; } }
+    public float WaitTimeBetweenWaves { get { return waitTimeBetweenWaves; } }
     
     public GameObject PlayerPrefab { get { return playerPrefab; }} 
     public Vector2 PlayerStartPosition { get { return playerStartPosition; }} 
     public float PlayerMoveSpeed { get { return playerMoveSpeed; }} 
     public float PlayerAngularSpeed { get { return playerAngularSpeed; }} 
+    public float PlayerHP { get { return playerHP; } }
     public int InitialNumberOfShots { get { return initialNumOfShots; }} 
     
     public GameObject EnemyPrefab { get { return enemyPrefab; }} 

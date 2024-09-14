@@ -24,7 +24,10 @@ public class PlayerAuthoring : MonoBehaviour
             Entity playerEntity = GetEntity(TransformUsageFlags.Dynamic);            
                         
             AddComponent<PlayerTag>(playerEntity);            
-            AddComponent<InputData>(playerEntity);            
+            AddComponent<InputData>(playerEntity);
+            AddComponent(playerEntity, new PlayerHealthData {
+                Value = authoring.GameData.PlayerHP,
+            });           
             AddComponent(playerEntity, new MovementData {
                 Speed = authoring.GameData.PlayerMoveSpeed,
                 AngularSpeed = 0

@@ -35,7 +35,6 @@ public partial struct ProjectileMoveSystem : ISystem
             ECB = ecb.AsParallelWriter(),
         };
         destroyJob.ScheduleParallel();
-        // destroyJob.Schedule();
         state.Dependency.Complete();        
 
         ecb.Playback(state.EntityManager);                                    
@@ -43,15 +42,13 @@ public partial struct ProjectileMoveSystem : ISystem
     }
 }
 
-// [BurstCompile]
-// [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
+[BurstCompile]
 public partial struct ProjectileDestroyJob : IJobEntity
 {
     public CameraData CameraData;
-    // public EntityCommandBuffer ECB;
     public EntityCommandBuffer.ParallelWriter ECB;
     
-    // [BurstCompile]
+    [BurstCompile]
     private void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity, EnabledRefRO<ProjectileTag> pTag, LocalTransform transform)
     {
         float2 topRight = CameraData.Position + (CameraData.Bounds/2 + CameraData.BoundsPadding/2);
@@ -60,21 +57,7 @@ public partial struct ProjectileDestroyJob : IJobEntity
         float2 pos = transform.Position.xy;
         
         if (pos.x < bottomLeft.x || pos.y < bottomLeft.y || pos.x > topRight.x || pos.y > topRight.y)
-        {            
-            // ECB.SetComponentEnabled<ProjectileTag>(entity, false);
-            // ECB.SetComponent(entity, new LocalTransform
-            // {
-            //     Position = new float3(0, 0, -100),
-            //     Rotation = transform.Rotation,            
-            //     Scale = transform.Scale             
-            // });
-
-            // ECB.SetComponent(chunkIndex, entity, new LocalTransform
-            // {
-            //     Position = new float3(0, 0, -100),            
-            //     Rotation = transform.Rotation,            
-            //     Scale = transform.Scale            
-            // });            
+        {                     
             ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, entity, false);
         }
     }
@@ -85,7 +68,6 @@ public partial struct ProjectileDestroyJob : IJobEntity
 public partial struct ProjectilesMoveJob : IJobEntity
 {
     public float DeltaTime;
-    // public EntityCommandBuffer ECB; 
     public EntityCommandBuffer.ParallelWriter ECB;            
     
     [BurstCompile]
@@ -101,7 +83,6 @@ public partial struct ProjectilesMoveJob : IJobEntity
             });
             return;
         }           
-        // transform.Position.xy += movementData.Direction.xy * movementData.Speed * DeltaTime;
         float2 newPos = transform.Position.xy + movementData.Direction.xy * movementData.Speed * DeltaTime;
         ECB.SetComponent(chunkIndex, projectileEntity, new LocalTransform {
             Position = new float3(newPos, 0),

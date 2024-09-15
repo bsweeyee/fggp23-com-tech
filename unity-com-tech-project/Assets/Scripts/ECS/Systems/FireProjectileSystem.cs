@@ -76,42 +76,38 @@ public partial struct FireProjectileJob : IJobEntity
     public float Division;
 
     public void Execute([ChunkIndexInQuery] int chunkIndex, Entity EntityToSpawn, SpawnData pData, EnabledRefRW<ProjectileTag> pTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag)    
-    {
-        if (toSpawnFlag.ValueRO == true)
-        {
-            // ECB.SetComponentEnabled<ProjectileTag>(chunkIndex, EntityToSpawn, true);                
-            ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, EntityToSpawn, false);
-            
-            ECB.SetComponent(chunkIndex, EntityToSpawn, new LocalTransform{
-                Position = ShooterLocalToWorld.Position,
-                Rotation = PrefabProjectileTransform.Rotation,
-                Scale = PrefabProjectileTransform.Scale
-            });
+    {        
+        ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, EntityToSpawn, false);
+        
+        ECB.SetComponent(chunkIndex, EntityToSpawn, new LocalTransform{
+            Position = ShooterLocalToWorld.Position,
+            Rotation = PrefabProjectileTransform.Rotation,
+            Scale = PrefabProjectileTransform.Scale
+        });
 
-            float3 direction = new float3(0, 0, 0);
-            if (GameData.PlayerNumberOfShots%2 == 0)
-            {
-                float3 right = (pData.SpawnIndex%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
-                int d = (int) math.floor(pData.SpawnIndex/2.0f);
-                direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
-            }
+        float3 direction = new float3(0, 0, 0);
+        if (GameData.PlayerNumberOfShots%2 == 0)
+        {
+            float3 right = (pData.SpawnIndex%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
+            int d = (int) math.floor(pData.SpawnIndex/2.0f);
+            direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
+        }
+        else
+        {
+            if (pData.SpawnIndex == 0) { direction = ShooterLocalToWorld.Up; }
             else
             {
-                if (pData.SpawnIndex == 0) { direction = ShooterLocalToWorld.Up; }
-                else
-                {
-                    int index = pData.SpawnIndex-1;
-                    float3 right = (index%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
-                    int d = (int) math.floor(index/2.0f);
-                    direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
-                }                        
-            }                    
-                                
-            ECB.SetComponent(chunkIndex, EntityToSpawn, new MovementData 
-            { 
-                Direction = direction.xy, 
-                Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
-            });             
-        }
+                int index = pData.SpawnIndex-1;
+                float3 right = (index%2 == 0) ? ShooterLocalToWorld.Right : -ShooterLocalToWorld.Right;
+                int d = (int) math.floor(index/2.0f);
+                direction = math.lerp(ShooterLocalToWorld.Up, right, (d+1)*Division);
+            }                        
+        }                    
+                            
+        ECB.SetComponent(chunkIndex, EntityToSpawn, new MovementData 
+        { 
+            Direction = direction.xy, 
+            Speed = GameData.ProjectileSpeed + ShooterMovementData.Speed
+        });
     }    
 }

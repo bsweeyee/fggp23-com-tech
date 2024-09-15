@@ -25,13 +25,7 @@ public partial struct EnemySpawnSystem : ISystem
             case 0:
             case 2:
             case 3:
-            case 4:
-            // foreach(var (eTag, toSpawnTag, entity) in SystemAPI.Query<EnabledRefRW<EnemyTag>, EnabledRefRW<ToSpawnFlag>>().WithEntityAccess())
-            // {
-            //     UnityEngine.Debug.Log($"here");
-            //     eTag.ValueRW = false;
-            //     toSpawnTag.ValueRW = false;            
-            // }
+            case 4:            
             new DestroyAllEnemyJob
             {
                 ECB = ecb.AsParallelWriter(),
@@ -109,39 +103,35 @@ public partial struct SpawnEnemyJob : IJobEntity
 
     public void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity, EnabledRefRW<EnemyTag> eTag, EnabledRefRW<ToSpawnFlag> toSpawnFlag, SpawnData spawnData)
     {
-        if (toSpawnFlag.ValueRO == true)
-        {            
-            // ECB.SetComponentEnabled<EnemyTag>(chunkIndex, entity, true);
-            ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, entity, false);
+        ECB.SetComponentEnabled<ToSpawnFlag>(chunkIndex, entity, false);
 
-            Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)(System.DateTime.Now.Ticks + spawnData.SpawnIndex));            
-            for(int i=0; i<spawnData.SpawnIndex; i++) random.NextFloat();
+        Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)(System.DateTime.Now.Ticks + spawnData.SpawnIndex));            
+        for(int i=0; i<spawnData.SpawnIndex; i++) random.NextFloat();
 
-            float RandomNumberA = random.NextFloat() * 2 - 1;
-            float RandomNumberB = random.NextFloat() * 2 - 1;
-            float RandomNumberC = random.NextFloat() * 2 - 1;
+        float RandomNumberA = random.NextFloat() * 2 - 1;
+        float RandomNumberB = random.NextFloat() * 2 - 1;
+        float RandomNumberC = random.NextFloat() * 2 - 1;
 
-            // UnityEngine.Debug.Log($"{RandomNumberA}, {RandomNumberB}, {RandomNumberC}");
-            int s1 = (int)math.sign(RandomNumberA); 
-            int s2 = (int)math.sign(RandomNumberB);                
-            float2 offset = new float2(0, 0);
-            
-            if (s2 > 0)
-            {
-                offset = new float2(s1 * cameraData.Bounds.x/2 + RandomNumberA * cameraData.BoundsPadding.x, RandomNumberC * cameraData.Bounds.y/2);                    
-            }
-            else
-            {
-                offset = new float2(RandomNumberC * cameraData.Bounds.x/2, s1 * cameraData.Bounds.y/2 + RandomNumberA * cameraData.BoundsPadding.y);
-            }        
-                            
-            float2 randomPosition = cameraData.Position + offset; 
-                                                
-            ECB.SetComponent(chunkIndex, entity, new LocalTransform {
-                Position = new float3(randomPosition.xy, 0),
-                Rotation = EnemyEntityInitialLocalTransform.Rotation,
-                Scale = EnemyEntityInitialLocalTransform.Scale
-            });     
+        // UnityEngine.Debug.Log($"{RandomNumberA}, {RandomNumberB}, {RandomNumberC}");
+        int s1 = (int)math.sign(RandomNumberA); 
+        int s2 = (int)math.sign(RandomNumberB);                
+        float2 offset = new float2(0, 0);
+        
+        if (s2 > 0)
+        {
+            offset = new float2(s1 * cameraData.Bounds.x/2 + RandomNumberA * cameraData.BoundsPadding.x, RandomNumberC * cameraData.Bounds.y/2);                    
         }
+        else
+        {
+            offset = new float2(RandomNumberC * cameraData.Bounds.x/2, s1 * cameraData.Bounds.y/2 + RandomNumberA * cameraData.BoundsPadding.y);
+        }        
+                        
+        float2 randomPosition = cameraData.Position + offset; 
+                                            
+        ECB.SetComponent(chunkIndex, entity, new LocalTransform {
+            Position = new float3(randomPosition.xy, 0),
+            Rotation = EnemyEntityInitialLocalTransform.Rotation,
+            Scale = EnemyEntityInitialLocalTransform.Scale
+        });        
     }
 }

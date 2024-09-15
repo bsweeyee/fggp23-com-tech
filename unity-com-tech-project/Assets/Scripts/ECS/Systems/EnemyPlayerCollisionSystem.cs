@@ -13,38 +13,38 @@ public partial struct EnemyPlayerCollisionSystem : ISystem
     {
         if (!SystemAPI.HasSingleton<GameStateComponent>()) return;
 
-        NativeReference<float2> playerVelocityRef = new NativeReference<float2>(Allocator.TempJob);
         EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         
         var gse = SystemAPI.GetSingletonEntity<GameStateComponent>();
         var gameStateComponent = SystemAPI.GetComponent<GameStateComponent>(gse);
 
-        foreach(var (pTag, pTransform, pAABB, pHealthData, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, PlayerHealthData>().WithEntityAccess())
+        foreach(var (pTag, pTransform, pAABB, pHealthData, movementData, entity) in SystemAPI.Query<PlayerTag, LocalToWorld, AABBData, PlayerHealthData, MovementData>().WithEntityAccess())
         {
             new EnemyPlayerCollisionJob {                
                 PlayerEntity = entity,
                 PlayerHealthData = pHealthData,
                 PlayerTransform = pTransform,
                 PlayerBounds = pAABB,
-                PlayerVelocityRef = playerVelocityRef,
+                PlayerMovementData = movementData,
+                Player = entity,
                 GameStateComponent = gameStateComponent,
                 GameEntity = gse,
-                ECB = ecb,
-            }.Schedule();   
+                ECB = ecb.AsParallelWriter(),
+            }.ScheduleParallel();   
         }
 
         state.Dependency.Complete();
         ecb.Playback(state.EntityManager);
         
-        float2 pVel = playerVelocityRef.Value;
-        foreach(var (pTag, movementData) in SystemAPI.Query<PlayerTag, RefRW<MovementData>>())
-        {
-            if (math.lengthsq(pVel) > 0)
-                movementData.ValueRW.ExternalVelocity = pVel;        
-        }
+        // float2 pVel = playerVelocityRef.Value;
+        // foreach(var (pTag, movementData) in SystemAPI.Query<PlayerTag, RefRW<MovementData>>())
+        // {
+        //     if (math.lengthsq(pVel) > 0)
+        //         movementData.ValueRW.ExternalVelocity = pVel;        
+        // }
         
         ecb.Dispose();
-        playerVelocityRef.Dispose();
+        // playerVelocityRef.Dispose();
     }
 }
 
@@ -55,14 +55,15 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
     public PlayerHealthData PlayerHealthData;
     public LocalToWorld PlayerTransform;
     public AABBData PlayerBounds;
-    public NativeReference<float2> PlayerVelocityRef;
+    public MovementData PlayerMovementData;
+    public Entity Player;
     
     public Entity GameEntity;
     public GameStateComponent GameStateComponent;
-    public EntityCommandBuffer ECB;
+    public EntityCommandBuffer.ParallelWriter ECB;
     
     [BurstCompile]
-    private void Execute(Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
+    private void Execute([ChunkIndexInQuery] int chunkIndex, Entity Enemy, EnabledRefRW<EnemyTag> eTag, in AABBData aabb, in LocalTransform transform, MovementData md)
     {
          if (eTag.ValueRO == false) return;
          
@@ -80,16 +81,22 @@ public partial struct EnemyPlayerCollisionJob : IJobEntity
         if (collisionX && collisionY)
         {
             // we deal damage to player
-            PlayerVelocityRef.Value = md.Direction * 10;            
-            ECB.SetComponentEnabled<EnemyTag>(Enemy, false);
+            float2 externalVel = md.Direction * 10;            
+            if (math.lengthsq(externalVel) > 0)
+            {
+                PlayerMovementData.ExternalVelocity = externalVel;
+                ECB.SetComponent(chunkIndex, Player, PlayerMovementData);
+            }
+            
+            ECB.SetComponentEnabled<EnemyTag>(chunkIndex, Enemy, false);
             
             PlayerHealthData.Value -= 1;
-            ECB.SetComponent(PlayerEntity, PlayerHealthData);
+            ECB.SetComponent(chunkIndex, PlayerEntity, PlayerHealthData);
             
             if (PlayerHealthData.Value <= 0)
             {
                 GameStateComponent.CurrentState = 2; // go to game over state
-                ECB.SetComponent(GameEntity, GameStateComponent);
+                ECB.SetComponent(chunkIndex, GameEntity, GameStateComponent);
             }
             // ECB.SetComponent(Enemy, new LocalTransform
             // {

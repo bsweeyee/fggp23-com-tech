@@ -44,7 +44,7 @@ MonoBehaviour:
     type: 3}
   playerStartPosition: {x: 0, y: 0}
   playerMoveSpeed: 10
-  playerAngularSpeed: 7
+  playerAngularSpeed: 4
   initialNumOfShots: 6
   playerHP: 20
   enemyPrefab: {fileID: 7403768431754806204, guid: c6ff83f3b5610c74d9e11d278b8dddb6,

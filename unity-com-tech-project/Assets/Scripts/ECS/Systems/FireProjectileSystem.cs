@@ -9,6 +9,8 @@ public partial struct FireProjectileSystem : ISystem
 {    
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<GameDataComponent>()) return;
+        
         var gameData = SystemAPI.GetSingleton<GameDataComponent>();
         var gs = SystemAPI.GetSingleton<GameStateComponent>();
         if (gs.CurrentState != 1) return;

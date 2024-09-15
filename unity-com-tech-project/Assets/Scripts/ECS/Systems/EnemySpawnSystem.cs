@@ -7,6 +7,9 @@ public partial struct EnemySpawnSystem : ISystem
 {
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<GameDataComponent>()) return;
+        if (!SystemAPI.HasSingleton<CameraData>()) return;
+
         var gameDataEntity = SystemAPI.GetSingletonEntity<GameDataComponent>();
         var gameData = SystemAPI.GetComponent<GameDataComponent>(gameDataEntity);        
         var spawnerData = SystemAPI.GetComponentRW<SpawnerData>(gameDataEntity);

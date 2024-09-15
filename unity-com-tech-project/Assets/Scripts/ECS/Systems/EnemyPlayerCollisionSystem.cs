@@ -11,6 +11,8 @@ public partial struct EnemyPlayerCollisionSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<GameStateComponent>()) return;
+
         NativeReference<float2> playerVelocityRef = new NativeReference<float2>(Allocator.TempJob);
         EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
         

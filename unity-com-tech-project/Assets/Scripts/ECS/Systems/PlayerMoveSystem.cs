@@ -9,6 +9,8 @@ public partial struct PlayerMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<GameDataComponent>()) return;
+
         float deltaTime = SystemAPI.Time.DeltaTime;
         GameDataComponent gc = SystemAPI.GetSingleton<GameDataComponent>();
         new PlayerMoveJob

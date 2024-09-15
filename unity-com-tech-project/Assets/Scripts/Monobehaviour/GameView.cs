@@ -2,7 +2,9 @@ using TMPro;
 using UnityEngine;
 using Unity.Entities;
 using UnityEngine.UI;
+using System.Collections;
 using Unity.Mathematics;
+using Unity.Entities.UniversalDelegates;
 
 public class GameView : MonoBehaviour
 {
@@ -22,6 +24,9 @@ public class GameView : MonoBehaviour
     private EntityManager em;
     private Entity gameEntity;
     private Entity playerEntity;
+
+    private bool gameEntityInitialized;
+    private bool playerEntityInitialized;
         
     Texture2D whiteTexture;
     Texture2D greyTexture;
@@ -30,24 +35,46 @@ public class GameView : MonoBehaviour
     void Start()
     {
         em = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-        var gameStateQuery = em.CreateEntityQuery(ComponentType.ReadOnly<GameStateComponent>());
-        gameEntity = gameStateQuery.GetSingletonEntity();        
-                
-        var playerQuery = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerHealthData>());
-        playerEntity = playerQuery.GetSingletonEntity();
-
+                        
         whiteTexture = GetTexture(2, 2, Color.white);
-        greyTexture = GetTexture(2, 2, Color.grey);
-
-        GameDataComponent gameData = em.GetComponentData<GameDataComponent>(gameEntity);                
-        tempShotCount = gameData.PlayerNumberOfShots;
-        tempEnemyCount = (int)gameData.SpawnCount.y;        
-        hp = hpRenderer.material;        
+        greyTexture = GetTexture(2, 2, Color.grey);            
     }
 
     void Update()
-    {        
+    {
+        if (gameEntity == Entity.Null) 
+        {
+            var gameStateQuery = em.CreateEntityQuery(ComponentType.ReadOnly<GameStateComponent>());
+            if (gameStateQuery.HasSingleton<GameStateComponent>())
+            {
+                gameEntity = gameStateQuery.GetSingletonEntity();
+            }
+            return;
+        }                 
+        if (playerEntity == Entity.Null) 
+        {
+            var playerQuery = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerHealthData>());
+            if (playerQuery.HasSingleton<PlayerHealthData>())
+            {
+                playerEntity = playerQuery.GetSingletonEntity(); 
+            }
+            return;
+        }
+
+        if (!gameEntityInitialized)
+        {           
+            GameDataComponent gameData = em.GetComponentData<GameDataComponent>(gameEntity);                
+            tempShotCount = gameData.PlayerNumberOfShots;
+            tempEnemyCount = (int)gameData.SpawnCount.y;        
+            hp = hpRenderer.material;   
+            
+            gameEntityInitialized = true;
+        }
+        if (!playerEntityInitialized)
+        {            
+            playerEntityInitialized = true;
+        }
+
         GameStateComponent gameStateData = em.GetComponentData<GameStateComponent>(gameEntity);        
         playUI.SetActive(gameStateData.CurrentState == 1);
         startUI.SetActive(gameStateData.CurrentState == 0);
@@ -92,6 +119,25 @@ public class GameView : MonoBehaviour
     int tempShotCount;
     int tempEnemyCount;
     bool displayDebug = false;
+    Queue logQueue = new Queue();
+    
+    void HandleLog(string logString, string stackTrace, LogType type) 
+    {
+        logQueue.Enqueue("[" + type + "] : " + logString);
+        if (type == LogType.Exception) logQueue.Enqueue(stackTrace);            
+        while (logQueue.Count > 5) logQueue.Dequeue();
+    }
+
+    void OnEnable() 
+    {
+        Application.logMessageReceived += HandleLog;
+    }
+
+    void OnDisable() 
+    {
+        Application.logMessageReceived -= HandleLog;
+    } 
+
     void OnGUI()
     {
         if (!displayDebug)
@@ -100,9 +146,27 @@ public class GameView : MonoBehaviour
             {
                 displayDebug = true;
             }
+             
         }
         else
-        {
+        {            
+            var debugRect = new Rect(Screen.width/2, 0, Screen.width/2, Screen.height/4);
+            Texture2D texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, Color.black);
+            texture.Apply();
+            
+            GUILayout.BeginArea(debugRect, texture);
+            if (GUILayout.Button("Close Logs"))
+            {
+                displayDebug = false;
+            }
+            GUI.Box(new Rect(0, 0, Screen.width/2, Screen.height/4), texture);
+            GUILayout.Label(string.Join("\n", logQueue.ToArray()));                
+            GUILayout.EndArea();
+
+            if (gameEntity == Entity.Null) return;                 
+            if (playerEntity == Entity.Null) return;
+
             GameDataComponent gameData = em.GetComponentData<GameDataComponent>(gameEntity);                
             GameStateComponent gameStateData = em.GetComponentData<GameStateComponent>(gameEntity);
             

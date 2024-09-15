@@ -10,6 +10,8 @@ public partial struct ProjectileMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<CameraData>()) return;
+        
         float deltaTime = SystemAPI.Time.DeltaTime;        
         Entity cdEntity = SystemAPI.GetSingletonEntity<CameraData>();
         CameraData cd = SystemAPI.GetComponent<CameraData>(cdEntity);

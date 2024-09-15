@@ -11,6 +11,8 @@ public partial struct EnemyMoveSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<CameraData>()) return;
+
         float deltaTime = SystemAPI.Time.DeltaTime; 
         CameraData cameraData = SystemAPI.GetSingleton<CameraData>();
         EntityCommandBuffer ecb = new EntityCommandBuffer(Allocator.TempJob);          

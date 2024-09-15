@@ -10,6 +10,9 @@ public partial struct EnemyProjectileCollisionSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        if (!SystemAPI.HasSingleton<GameStateComponent>()) return;
+        if (!SystemAPI.HasSingleton<GameDataComponent>()) return;
+
         EntityCommandBuffer ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);        
         Entity gameEntity = SystemAPI.GetSingletonEntity<GameDataComponent>();
         GameStateComponent gsc = SystemAPI.GetComponent<GameStateComponent>(gameEntity);

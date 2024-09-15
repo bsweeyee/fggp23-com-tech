@@ -45,14 +45,14 @@ Many operations that are done in this game needs to be done while looping over a
 However, we can structure the data such that for each loop, the current iteration does not depend on the previous iteration. (i.e each iteration is independent of each other)
 
 #### How it is done
-**Spawning**
+##### Spawning
 This was described in the *Fixed size Heap memory allocations on startup* Section. 
 But the key idea is figuring out that we can avoid looping and spawning entity one by one using the IEnableableComponent that flags them to be spawned, then defer the spawning in the parallel job later.
 
-**Moving**
+##### Moving
 Using the IEnableableComponent to filter out if the Enemy / Projectile is on screen on not, we can then carry out the movement logic in parallel.
 
-**Collision**
+##### Collision
 There are 2 collisions systems:
 - EnemyProjectile
 - EnemyPlayer

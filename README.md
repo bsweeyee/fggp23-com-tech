@@ -11,12 +11,14 @@ A simple space shooter where you shoot waves of enemies that spawn and come towa
 
 ## Optimizations
 ### Fixed size Heap memory allocations on startup
-![Profiler_memory_2.png](https://github.com/bsweeyee/fggp23-com-tech/blob/refactor/images/Profiler_memory_2.png "All memory allocations are done at start of game")
+![Profiler_memory_2.png](https://github.com/bsweeyee/fggp23-com-tech/blob/refactor/images/Profiler_memory_2.png)
+*All memory allocations are done at start of game*
+
+![Profiler_memory_1.png](https://github.com/bsweeyee/fggp23-com-tech/blob/refactor/images/Profiler_memory.png)
+*Entities allocated memory remains constant throughout the game*
 
 Main idea is similar to Object Pooling in OOP
 When starting up the game, it allocates all the memory for the Projectile and Enemy entities.
-
-![Profiler_memory_1.png](https://github.com/bsweeyee/fggp23-com-tech/blob/refactor/images/Profiler_memory.png "Entities allocated memory remains constant throughout the game")
 
 Then in the FireProjectileSystem and EnemySpawnSystem Jobs, we get a copy of the entity and set their states accordingly.
 
@@ -58,7 +60,8 @@ There are 2 collisions systems:
 In both cases, the parallelized part is the enemy collision since there should be more enemies then both projectile and player at any one point.
 
 ## Other optimizations to look into
-![Profiler_memory_3.png](https://github.com/bsweeyee/fggp23-com-tech/blob/fb5ff80af003de5e4895bf19faed105e8a2a0542/images/Profiler_memory_3.png "Current profiler shows EnemyProjectileSystem and EnemyMoveSystem can be improved. This is at ~10000 enemy entities spawned at once")
+![Profiler_memory_3.png](https://github.com/bsweeyee/fggp23-com-tech/blob/fb5ff80af003de5e4895bf19faed105e8a2a0542/images/Profiler_memory_3.png)
+*Current profiler shows EnemyProjectileSystem and EnemyMoveSystem can be improved. This is at ~10000 enemy entities spawned at once*
 
 ### Improving collision checks
 A big performance hit right now comes from the projectile-enemy collisions. Even though we already parallelize a single projectile-enemy check, we still have to loop through each projectile.
